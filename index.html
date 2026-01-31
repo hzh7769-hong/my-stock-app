@@ -20,22 +20,22 @@
 <body class="p-4 md:p-8">
 
     <div class="max-w-6xl mx-auto">
-        <header class="flex flex-col md:flex-row justify-between items-center mb-10 bg-white p-10 rounded-[3rem] shadow-xl">
-            <div>
-                <h1 class="text-4xl font-black text-slate-800 tracking-tighter">OPAL <span class="text-blue-600">INVEST</span></h1>
-                <p id="system-msg" class="text-xs text-slate-400 font-bold uppercase tracking-[0.3em] mt-2">FinMind API 實時引擎 v9.0</p>
-            </div>
-            <div class="flex gap-12 mt-6 md:mt-0">
-                <div class="text-right">
-                    <p class="text-slate-400 text-[10px] font-black uppercase mb-1">總資產市值</p>
-                    <p id="total-mkt-val" class="text-3xl font-black text-slate-900">$ 0</p>
-                </div>
-                <div class="text-right border-l-2 border-slate-100 pl-12">
-                    <p class="text-slate-400 text-[10px] font-black uppercase mb-1">累積總損益</p>
-                    <p id="total-pnl-val" class="text-3xl font-black">--</p>
-                </div>
-            </div>
-        </header>
+        <header class="flex flex-col md:flex-row justify-between items-center mb-10 bg-white p-10 rounded-[3rem] shadow-xl border-b-4 border-blue-600">
+    <div>
+        <h1 class="text-4xl font-black text-slate-800 tracking-tighter">股票價值投資策略 <span class="text-blue-600">v9.1</span></h1>
+        <p id="system-msg" class="text-xs text-slate-400 font-bold uppercase tracking-[0.3em] mt-2">FinMind API 實時分析引擎</p>
+    </div>
+    <div class="flex gap-12 mt-6 md:mt-0">
+        <div class="text-right">
+            <p class="text-slate-400 text-[10px] font-black uppercase mb-1">資產估計市值</p>
+            <p id="total-mkt-val" class="text-3xl font-black text-slate-900">$ 0</p>
+        </div>
+        <div class="text-right border-l-2 border-slate-100 pl-12">
+            <p class="text-slate-400 text-[10px] font-black uppercase mb-1">累積投資損益</p>
+            <p id="total-pnl-val" class="text-3xl font-black">--</p>
+        </div>
+    </div>
+</header>
 
         <div class="flex space-x-12 mb-8 px-8 text-sm font-black text-slate-400 border-b-2 border-slate-200">
             <button onclick="switchTab('hold')" id="tab-hold" class="pb-4 tab-active transition-all">持股庫存</button>
@@ -254,3 +254,4 @@
     </script>
 </body>
 </html>
+
