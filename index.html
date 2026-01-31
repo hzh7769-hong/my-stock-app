@@ -2,80 +2,84 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>股票價值投資策略 v10.5</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI 股票價值投資策略 v10.6</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f1f5f9; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; color: #1e293b; }
         .tab-active { border-bottom: 4px solid #2563eb; color: #2563eb; font-weight: 900; }
-        .card { background: white; border-radius: 2rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05); }
-        .advice-badge { padding: 0.6rem 1.2rem; border-radius: 1rem; font-weight: 900; }
-        .btn-loading { opacity: 0.5; pointer-events: none; }
+        .card { background: white; border-radius: 1.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
+        .advice-badge { padding: 0.4rem 0.8rem; border-radius: 0.75rem; font-weight: 900; font-size: 0.875rem; }
+        
+        /* 手機版字體縮放優化 */
+        @media (max-width: 640px) {
+            html { font-size: 14px; }
+            .p-8 { padding: 1.25rem !important; }
+            .text-2xl { font-size: 1.25rem !important; }
+            .text-3xl { font-size: 1.5rem !important; }
+            .text-4xl { font-size: 1.75rem !important; }
+            input { padding: 0.75rem !important; font-size: 1rem !important; }
+        }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body class="p-3 md:p-8">
 
     <div class="max-w-6xl mx-auto">
-        <header class="flex flex-col md:flex-row justify-between items-center mb-10 bg-white p-10 rounded-[3rem] shadow-xl border-b-8 border-blue-600">
-            <div>
-                <h1 class="text-4xl font-black text-slate-800 tracking-tighter">股票價值投資策略 <span class="text-blue-600 text-sm">v10.5</span></h1>
-                <div class="flex gap-4 mt-3">
-                    <p id="system-msg" class="text-xs text-slate-400 font-bold uppercase tracking-widest">初始化雲端引擎...</p>
-                    <span id="cloud-status" class="text-xs font-black text-emerald-500"><i class="fa-solid fa-cloud"></i> 雲端連線正常</span>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="card p-6 flex flex-col items-center justify-center">
+                <p class="text-[10px] font-black text-slate-400 uppercase mb-4 tracking-widest">資產勝率分析</p>
+                <div class="w-40 h-40 relative">
+                    <canvas id="winRateChart"></canvas>
+                    <div class="absolute inset-0 flex items-center justify-center flex-col">
+                        <span id="win-pct" class="text-2xl font-black">--%</span>
+                        <span class="text-[8px] text-slate-400 font-bold uppercase">Win Rate</span>
+                    </div>
                 </div>
             </div>
-            <div class="flex gap-12 mt-6 md:mt-0">
-                <div class="text-right">
-                    <p class="text-slate-400 text-[10px] font-black uppercase mb-1">資產估計市值</p>
-                    <p id="total-mkt-val" class="text-3xl font-black text-slate-900">$ 0</p>
-                </div>
-                <div class="text-right border-l-2 border-slate-100 pl-12">
-                    <p class="text-slate-400 text-[10px] font-black uppercase mb-1">累積投資損益</p>
-                    <p id="total-pnl-val" class="text-3xl font-black">--</p>
-                </div>
-            </div>
-        </header>
 
-        <div class="flex space-x-12 mb-8 px-8 text-sm font-black text-slate-400 border-b-2 border-slate-200">
-            <button onclick="switchTab('hold')" id="tab-hold" class="pb-4 tab-active transition-all">持股庫存</button>
-            <button onclick="switchTab('watch')" id="tab-watch" class="pb-4 transition-all">觀察名單</button>
-        </div>
-
-        <div class="card p-8 mb-10">
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-6">
-                <div>
-                    <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase">股票代號</label>
-                    <input id="in-id" type="text" placeholder="2330" class="w-full border-2 border-slate-100 p-4 rounded-2xl text-lg font-bold outline-none focus:border-blue-500">
+            <div class="md:col-span-2 card p-8 flex flex-col justify-center relative overflow-hidden">
+                <div class="flex flex-col md:flex-row justify-around items-center gap-8 relative z-10">
+                    <div class="text-center md:text-left">
+                        <p class="text-slate-400 text-[10px] font-black uppercase mb-1 tracking-widest">總估計市值 (TWD)</p>
+                        <p id="total-mkt-val" class="text-4xl font-black text-slate-900 leading-none">$ 0</p>
+                    </div>
+                    <div class="text-center md:text-left border-t md:border-t-0 md:border-l-2 border-slate-100 pt-6 md:pt-0 md:pl-12">
+                        <p class="text-slate-400 text-[10px] font-black uppercase mb-1 tracking-widest">累計總盈虧 (ALL-TIME)</p>
+                        <p id="total-pnl-val" class="text-4xl font-black">--</p>
+                    </div>
                 </div>
-                <div class="hold-field">
-                    <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase">持股張數</label>
-                    <input id="in-qty" type="number" step="0.001" placeholder="1.0" class="w-full border-2 border-slate-100 p-4 rounded-2xl text-lg font-bold outline-none">
-                </div>
-                <div class="hold-field">
-                    <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase">買入成本</label>
-                    <input id="in-price" type="number" step="0.01" placeholder="0.0" class="w-full border-2 border-slate-100 p-4 rounded-2xl text-lg font-bold outline-none">
-                </div>
-                <div class="watch-field hidden col-span-2">
-                    <p class="text-[10px] font-black text-blue-400 mb-2 uppercase">觀察模式</p>
-                    <p class="text-slate-400 text-xs italic">觀察名單將自動追蹤現價，不計入資產總額。</p>
-                </div>
-                
-                <div id="btn-container" class="col-span-2 flex items-end">
-                    <button id="add-btn" onclick="handleAdd()" class="w-full bg-slate-900 text-white rounded-2xl font-black py-5 uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl">
-                        新增至分析清單
-                    </button>
+                <div class="absolute top-4 right-6">
+                    <span id="cloud-status" class="text-[10px] font-black text-emerald-500 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
+                        <i class="fa-solid fa-cloud"></i> CLOUD SYNCED
+                    </span>
                 </div>
             </div>
         </div>
 
-        <div class="card overflow-hidden">
-            <table class="w-full text-left">
+        <div class="flex space-x-8 mb-6 px-4 text-sm font-black text-slate-400 border-b">
+            <button onclick="switchTab('hold')" id="tab-hold" class="pb-3 tab-active">持股庫存</button>
+            <button onclick="switchTab('watch')" id="tab-watch" class="pb-3">觀察名單</button>
+        </div>
+
+        <div class="card p-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <input id="in-id" type="text" placeholder="股票代號 (如 2330)" class="w-full border-2 border-slate-100 p-4 rounded-xl font-bold focus:border-blue-500 outline-none">
+                <input id="in-qty" type="number" placeholder="持股張數" class="hold-field w-full border-2 border-slate-100 p-4 rounded-xl font-bold outline-none">
+                <input id="in-price" type="number" placeholder="買入成本" class="hold-field w-full border-2 border-slate-100 p-4 rounded-xl font-bold outline-none">
+                <button id="add-btn" onclick="handleAdd()" class="w-full bg-slate-900 text-white rounded-xl font-black py-4 uppercase hover:bg-blue-600 transition-all shadow-lg active:scale-95">
+                    新增標的
+                </button>
+            </div>
+        </div>
+
+        <div class="card overflow-x-auto">
+            <table class="w-full text-left min-w-[600px]">
                 <thead class="bg-slate-50 border-b">
-                    <tr id="table-head" class="text-slate-400 font-black text-[10px] uppercase tracking-widest"></tr>
+                    <tr id="table-head" class="text-slate-400 font-black text-[10px] uppercase"></tr>
                 </thead>
                 <tbody id="list-body" class="divide-y divide-slate-50"></tbody>
             </table>
@@ -83,43 +87,33 @@
     </div>
 
     <script>
-        // --- 設定區 ---
+        // --- 核心設定 ---
         const SUPABASE_URL = "https://ssfjjxodayazqvkughev.supabase.co";
         const SUPABASE_KEY = "sb_publishable_XxIhEbw9nVyc3Qr9tkY7qw_deXnd33I";
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         const FINMIND_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRlIjoiMjAyNi0wMS0zMSAxMDo0NDo0MyIsInVzZXJfaWQiOiJoemg3NzY5IiwiZW1haWwiOiJoemg3NzY5QGdtYWlsLmNvbSIsImlwIjoiMS4xNjguMjE1LjgzIn0.-bUwxRYsIVslCKG5RZtjIRL50H1Oik4h_stpwslOX10";
 
-        let currentTab = 'hold', stockDB = {};
-        let allData = []; // 存放從雲端抓下來的所有原始資料
+        let currentTab = 'hold', stockDB = {}, allData = [], chartInstance = null;
 
         // --- 初始化 ---
         async function init() {
             try {
-                // 1. 抓取股票名稱
                 const res = await fetch(`https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockInfo&token=${FINMIND_TOKEN}`);
                 const json = await res.json();
                 json.data.forEach(s => stockDB[s.stock_id] = s.stock_name);
-                
-                // 2. 從雲端抓取資料
                 await fetchFromCloud();
-                document.getElementById('system-msg').innerText = "雲端數據已同步";
-            } catch (e) {
-                document.getElementById('system-msg').innerText = "連線異常";
-                console.error(e);
-            }
+            } catch (e) { console.error("Init Error:", e); }
         }
 
         async function fetchFromCloud() {
             const { data, error } = await _supabase.from('user_holdings').select('*');
-            if (error) {
-                console.error("Cloud Fetch Error:", error);
-                return;
+            if (!error) {
+                allData = data;
+                render();
             }
-            allData = data;
-            render();
         }
 
-        async function fetchPrice(id) {
+        async function getPrice(id) {
             try {
                 const res = await fetch(`https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=${id}&start_date=2026-01-20&token=${FINMIND_TOKEN}`);
                 const json = await res.json();
@@ -127,116 +121,120 @@
             } catch (e) { return null; }
         }
 
-        // --- 新增功能 ---
         async function handleAdd() {
             const id = document.getElementById('in-id').value.trim();
             const btn = document.getElementById('add-btn');
-            
             if (!id) return;
-            btn.innerText = "同步至雲端中...";
-            btn.classList.add('btn-loading');
 
-            // 如果是觀察名單，買入價格設為 0
+            btn.disabled = true;
+            btn.innerText = "同步中...";
+
             const qty = currentTab === 'hold' ? (parseFloat(document.getElementById('in-qty').value) || 0) : 0;
             const price = currentTab === 'hold' ? (parseFloat(document.getElementById('in-price').value) || 0) : 0;
 
-            const { error } = await _supabase.from('user_holdings').insert([
-                { stock_id: id, qty: qty, buy_price: price }
-            ]);
+            const { error } = await _supabase.from('user_holdings').insert([{ stock_id: id, qty: qty, buy_price: price }]);
 
-            if (error) {
-                alert("寫入失敗：" + error.message);
-            } else {
+            if (!error) {
                 await fetchFromCloud();
                 document.querySelectorAll('input').forEach(i => i.value = "");
             }
-            
-            btn.innerText = "新增至分析清單";
-            btn.classList.remove('btn-loading');
+            btn.disabled = false;
+            btn.innerText = "新增標的";
         }
 
-        // --- 刪除功能 ---
-        async function remove(db_id) {
-            if(!confirm("確定要刪除嗎？這將會同步從雲端移除。")) return;
-            const { error } = await _supabase.from('user_holdings').delete().eq('id', db_id);
-            if (!error) await fetchFromCloud();
+        async function remove(id) {
+            if(!confirm("確定從雲端刪除？")) return;
+            await _supabase.from('user_holdings').delete().eq('id', id);
+            await fetchFromCloud();
         }
 
-        // --- 畫面渲染 ---
+        function switchTab(t) {
+            currentTab = t;
+            document.getElementById('tab-hold').className = t === 'hold' ? 'pb-3 tab-active' : 'pb-3';
+            document.getElementById('tab-watch').className = t === 'watch' ? 'pb-3 tab-active' : 'pb-3';
+            document.querySelectorAll('.hold-field').forEach(el => el.style.display = t === 'hold' ? 'block' : 'none');
+            render();
+        }
+
         async function render() {
             const body = document.getElementById('list-body');
             const head = document.getElementById('table-head');
-            body.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400 font-bold">雲端計算中...</td></tr>';
+            body.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400 font-bold animate-pulse text-xs tracking-widest">SYNCING CLOUD DATA...</td></tr>';
             
-            let totalMkt = 0, totalCost = 0;
-            const rows = [];
-
-            // 過濾資料：持股(price > 0) 或 觀察(price == 0)
+            let totalMkt = 0, totalCost = 0, winCount = 0, lossCount = 0;
             const filtered = allData.filter(d => currentTab === 'hold' ? d.buy_price > 0 : d.buy_price <= 0);
 
             if (currentTab === 'hold') {
-                head.innerHTML = '<th class="p-8">標的名稱</th><th class="p-8">目前現價</th><th class="p-8">損益狀態</th><th class="p-8 text-center">操作建議</th><th class="p-8 text-right">管理</th>';
+                head.innerHTML = '<th class="p-5 md:p-8">標的名</th><th class="p-5 md:p-8">現價</th><th class="p-5 md:p-8">損益 %</th><th class="p-5 md:p-8 text-center">建議</th><th class="p-5 md:p-8 text-right">管理</th>';
             } else {
-                head.innerHTML = '<th class="p-8">觀察標的</th><th class="p-8">目前現價</th><th class="p-8">狀態</th><th class="p-8 text-center">投資決策</th><th class="p-8 text-right">管理</th>';
+                head.innerHTML = '<th class="p-5 md:p-8">觀察標的</th><th class="p-5 md:p-8">現價</th><th class="p-5 md:p-8">狀態</th><th class="p-5 md:p-8 text-center">投資決策</th><th class="p-5 md:p-8 text-right">管理</th>';
             }
 
+            const rows = [];
             for (let item of filtered) {
-                const live = await fetchPrice(item.stock_id);
-                const name = stockDB[item.stock_id] || "未知標的";
+                const live = await getPrice(item.stock_id);
+                const name = stockDB[item.stock_id] || "未知";
                 
                 if (currentTab === 'hold') {
-                    const pnlPct = (((live - item.buy_price) / item.buy_price) * 100).toFixed(2);
-                    const pnlAmt = Math.round((live - item.buy_price) * item.qty * 1000);
+                    const pnl = live - item.buy_price;
+                    const pnlPct = ((pnl / item.buy_price) * 100).toFixed(1);
                     totalMkt += live * item.qty * 1000;
                     totalCost += item.buy_price * item.qty * 1000;
+                    if (pnl >= 0) winCount++; else lossCount++;
 
                     rows.push(`
                         <tr class="hover:bg-slate-50 transition-all">
-                            <td class="p-8 font-black text-lg text-slate-700">${item.stock_id} ${name}</td>
-                            <td class="p-8 font-black text-2xl text-blue-600">${live || '--'}</td>
-                            <td class="p-8">
-                                <span class="${pnlPct >= 0 ? 'text-emerald-500' : 'text-rose-500'} font-black text-xl">${pnlPct}%</span><br>
-                                <span class="text-xs font-bold text-slate-300">$${pnlAmt.toLocaleString()}</span>
-                            </td>
-                            <td class="p-8 text-center"><span class="advice-badge bg-emerald-500 text-white text-lg font-black italic">🔥 強勢續抱</span></td>
-                            <td class="p-8 text-right"><button onclick="remove(${item.id})" class="text-slate-200 hover:text-rose-500 text-xl transition-colors"><i class="fa-solid fa-trash-can"></i></button></td>
+                            <td class="p-5 md:p-8 font-black text-slate-700">${item.stock_id}<br><span class="text-[10px] text-slate-400 font-bold">${name}</span></td>
+                            <td class="p-5 md:p-8 font-black text-lg md:text-xl text-blue-600">${live || '--'}</td>
+                            <td class="p-5 md:p-8 font-black ${pnl >= 0 ? 'text-emerald-500' : 'text-rose-500'} text-lg">${pnlPct}%</td>
+                            <td class="p-5 md:p-8 text-center"><span class="advice-badge bg-emerald-500 text-white italic">續抱</span></td>
+                            <td class="p-5 md:p-8 text-right"><button onclick="remove(${item.id})" class="text-slate-200 hover:text-rose-400"><i class="fa-solid fa-trash-can"></i></button></td>
                         </tr>`);
                 } else {
                     rows.push(`
-                        <tr class="hover:bg-blue-50/50 border-l-4 border-blue-500 transition-all">
-                            <td class="p-8 font-black text-lg text-slate-700">${item.stock_id} ${name}</td>
-                            <td class="p-8 font-black text-2xl text-slate-400">${live || '--'}</td>
-                            <td class="p-8 font-bold text-slate-300 italic">雲端監控中</td>
-                            <td class="p-8 text-center"><span class="advice-badge bg-slate-100 text-slate-400 text-sm">等待買點</span></td>
-                            <td class="p-8 text-right"><button onclick="remove(${item.id})" class="text-slate-200 hover:text-rose-500 text-xl"><i class="fa-solid fa-trash-can"></i></button></td>
+                        <tr class="hover:bg-blue-50/50 transition-all">
+                            <td class="p-5 md:p-8 font-black text-slate-700">${item.stock_id}<br><span class="text-[10px] text-slate-400 font-bold">${name}</span></td>
+                            <td class="p-5 md:p-8 font-black text-lg md:text-xl text-slate-400">${live || '--'}</td>
+                            <td class="p-5 md:p-8 font-bold text-slate-300 italic text-xs uppercase tracking-tighter">Monitoring</td>
+                            <td class="p-5 md:p-8 text-center"><span class="advice-badge bg-slate-100 text-slate-400 font-black">等待</span></td>
+                            <td class="p-5 md:p-8 text-right"><button onclick="remove(${item.id})" class="text-slate-200 hover:text-rose-400"><i class="fa-solid fa-trash-can"></i></button></td>
                         </tr>`);
                 }
             }
 
-            body.innerHTML = rows.length > 0 ? rows.join('') : '<tr><td colspan="5" class="p-10 text-center text-slate-300 italic text-sm">目前此清單尚無資料，請由上方新增</td></tr>';
+            body.innerHTML = rows.length > 0 ? rows.join('') : '<tr><td colspan="5" class="p-10 text-center text-slate-300 italic text-xs tracking-widest uppercase">No Records Found</td></tr>';
             
-            // 更新儀表板
+            // 儀表板與圖表更新
             const diff = totalMkt - totalCost;
-            const diffPct = totalCost > 0 ? ((diff/totalCost)*100).toFixed(2) : 0;
+            const diffPct = totalCost > 0 ? ((diff/totalCost)*100).toFixed(1) : 0;
             document.getElementById('total-mkt-val').innerText = `$ ${Math.round(totalMkt).toLocaleString()}`;
             document.getElementById('total-pnl-val').innerText = `${diff >= 0 ? '+' : ''}${Math.round(diff).toLocaleString()} (${diffPct}%)`;
-            document.getElementById('total-pnl-val').className = `text-3xl font-black ${diff >= 0 ? 'text-emerald-500' : 'text-rose-500'}`;
+            document.getElementById('total-pnl-val').className = `text-4xl font-black ${diff >= 0 ? 'text-emerald-500' : 'text-rose-500'}`;
+            
+            updateChart(winCount, lossCount);
         }
 
-        // --- 切換分頁 ---
-        function switchTab(t) {
-            currentTab = t;
-            document.getElementById('tab-hold').className = t === 'hold' ? 'pb-4 tab-active' : 'pb-4';
-            document.getElementById('tab-watch').className = t === 'watch' ? 'pb-4 tab-active' : 'pb-4';
-            
-            // 隱藏/顯示持股專用欄位
-            document.querySelectorAll('.hold-field').forEach(el => el.classList.toggle('hidden', t !== 'hold'));
-            document.querySelectorAll('.watch-field').forEach(el => el.classList.toggle('hidden', t !== 'watch'));
-            
-            render();
+        function updateChart(win, loss) {
+            const ctx = document.getElementById('winRateChart').getContext('2d');
+            const total = win + loss;
+            const winPct = total > 0 ? Math.round((win/total)*100) : 0;
+            document.getElementById('win-pct').innerText = `${winPct}%`;
+
+            if (chartInstance) chartInstance.destroy();
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [win, loss || (total === 0 ? 1 : 0)],
+                        backgroundColor: ['#10b981', '#f1f5f9'],
+                        borderWidth: 0,
+                        cutout: '80%'
+                    }]
+                },
+                options: { plugins: { tooltip: { enabled: false } }, rotation: -90, circumference: 180 }
+            });
         }
 
-        // 執行初始化
         init();
     </script>
 </body>
