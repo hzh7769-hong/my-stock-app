@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AI 股票價值投資策略 v10.6</title>
+    <title>AI 股票價值投資策略 v10.7</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -15,14 +15,13 @@
         .card { background: white; border-radius: 1.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
         .advice-badge { padding: 0.4rem 0.8rem; border-radius: 0.75rem; font-weight: 900; font-size: 0.875rem; }
         
-        /* 手機版字體縮放優化 */
+        /* 手機版優化 */
         @media (max-width: 640px) {
             html { font-size: 14px; }
             .p-8 { padding: 1.25rem !important; }
-            .text-2xl { font-size: 1.25rem !important; }
-            .text-3xl { font-size: 1.5rem !important; }
-            .text-4xl { font-size: 1.75rem !important; }
             input { padding: 0.75rem !important; font-size: 1rem !important; }
+            /* 隱藏部分不重要的手機版表格欄位以防擁擠 */
+            .mobile-hide { display: none; } 
         }
     </style>
 </head>
@@ -30,13 +29,12 @@
 
     <div class="max-w-6xl mx-auto">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="card p-6 flex flex-col items-center justify-center">
-                <p class="text-[10px] font-black text-slate-400 uppercase mb-4 tracking-widest">資產勝率分析</p>
-                <div class="w-40 h-40 relative">
+            <div class="card p-6 flex flex-col items-center justify-center relative">
+                <p class="text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">投資組合勝率</p>
+                <div class="w-32 h-32 relative">
                     <canvas id="winRateChart"></canvas>
-                    <div class="absolute inset-0 flex items-center justify-center flex-col">
-                        <span id="win-pct" class="text-2xl font-black">--%</span>
-                        <span class="text-[8px] text-slate-400 font-bold uppercase">Win Rate</span>
+                    <div class="absolute inset-0 flex items-center justify-center flex-col pointer-events-none">
+                        <span id="win-pct" class="text-2xl font-black text-slate-800">--%</span>
                     </div>
                 </div>
             </div>
@@ -77,7 +75,7 @@
         </div>
 
         <div class="card overflow-x-auto">
-            <table class="w-full text-left min-w-[600px]">
+            <table class="w-full text-left min-w-[600px] md:min-w-full">
                 <thead class="bg-slate-50 border-b">
                     <tr id="table-head" class="text-slate-400 font-black text-[10px] uppercase"></tr>
                 </thead>
@@ -87,7 +85,7 @@
     </div>
 
     <script>
-        // --- 核心設定 ---
+        // --- 設定區 ---
         const SUPABASE_URL = "https://ssfjjxodayazqvkughev.supabase.co";
         const SUPABASE_KEY = "sb_publishable_XxIhEbw9nVyc3Qr9tkY7qw_deXnd33I";
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -159,15 +157,15 @@
         async function render() {
             const body = document.getElementById('list-body');
             const head = document.getElementById('table-head');
-            body.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400 font-bold animate-pulse text-xs tracking-widest">SYNCING CLOUD DATA...</td></tr>';
+            body.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400 font-bold animate-pulse text-xs tracking-widest">SYNCING DATA...</td></tr>';
             
             let totalMkt = 0, totalCost = 0, winCount = 0, lossCount = 0;
             const filtered = allData.filter(d => currentTab === 'hold' ? d.buy_price > 0 : d.buy_price <= 0);
 
             if (currentTab === 'hold') {
-                head.innerHTML = '<th class="p-5 md:p-8">標的名</th><th class="p-5 md:p-8">現價</th><th class="p-5 md:p-8">損益 %</th><th class="p-5 md:p-8 text-center">建議</th><th class="p-5 md:p-8 text-right">管理</th>';
+                head.innerHTML = '<th class="p-5">標的</th><th class="p-5">現價</th><th class="p-5">損益%</th><th class="p-5 text-center mobile-hide">建議</th><th class="p-5 text-right">管理</th>';
             } else {
-                head.innerHTML = '<th class="p-5 md:p-8">觀察標的</th><th class="p-5 md:p-8">現價</th><th class="p-5 md:p-8">狀態</th><th class="p-5 md:p-8 text-center">投資決策</th><th class="p-5 md:p-8 text-right">管理</th>';
+                head.innerHTML = '<th class="p-5">觀察標的</th><th class="p-5">現價</th><th class="p-5">狀態</th><th class="p-5 text-center mobile-hide">決策</th><th class="p-5 text-right">管理</th>';
             }
 
             const rows = [];
@@ -184,27 +182,27 @@
 
                     rows.push(`
                         <tr class="hover:bg-slate-50 transition-all">
-                            <td class="p-5 md:p-8 font-black text-slate-700">${item.stock_id}<br><span class="text-[10px] text-slate-400 font-bold">${name}</span></td>
-                            <td class="p-5 md:p-8 font-black text-lg md:text-xl text-blue-600">${live || '--'}</td>
-                            <td class="p-5 md:p-8 font-black ${pnl >= 0 ? 'text-emerald-500' : 'text-rose-500'} text-lg">${pnlPct}%</td>
-                            <td class="p-5 md:p-8 text-center"><span class="advice-badge bg-emerald-500 text-white italic">續抱</span></td>
-                            <td class="p-5 md:p-8 text-right"><button onclick="remove(${item.id})" class="text-slate-200 hover:text-rose-400"><i class="fa-solid fa-trash-can"></i></button></td>
+                            <td class="p-5 font-black text-slate-700">${item.stock_id}<br><span class="text-[10px] text-slate-400 font-bold">${name}</span></td>
+                            <td class="p-5 font-black text-lg text-blue-600">${live || '--'}</td>
+                            <td class="p-5 font-black ${pnl >= 0 ? 'text-emerald-500' : 'text-rose-500'} text-lg">${pnlPct}%</td>
+                            <td class="p-5 text-center mobile-hide"><span class="advice-badge bg-emerald-500 text-white italic">續抱</span></td>
+                            <td class="p-5 text-right"><button onclick="remove(${item.id})" class="text-slate-300 hover:text-rose-500"><i class="fa-solid fa-trash-can"></i></button></td>
                         </tr>`);
                 } else {
                     rows.push(`
                         <tr class="hover:bg-blue-50/50 transition-all">
-                            <td class="p-5 md:p-8 font-black text-slate-700">${item.stock_id}<br><span class="text-[10px] text-slate-400 font-bold">${name}</span></td>
-                            <td class="p-5 md:p-8 font-black text-lg md:text-xl text-slate-400">${live || '--'}</td>
-                            <td class="p-5 md:p-8 font-bold text-slate-300 italic text-xs uppercase tracking-tighter">Monitoring</td>
-                            <td class="p-5 md:p-8 text-center"><span class="advice-badge bg-slate-100 text-slate-400 font-black">等待</span></td>
-                            <td class="p-5 md:p-8 text-right"><button onclick="remove(${item.id})" class="text-slate-200 hover:text-rose-400"><i class="fa-solid fa-trash-can"></i></button></td>
+                            <td class="p-5 font-black text-slate-700">${item.stock_id}<br><span class="text-[10px] text-slate-400 font-bold">${name}</span></td>
+                            <td class="p-5 font-black text-lg text-slate-400">${live || '--'}</td>
+                            <td class="p-5 font-bold text-slate-300 italic text-xs uppercase">Monitor</td>
+                            <td class="p-5 text-center mobile-hide"><span class="advice-badge bg-slate-100 text-slate-400 font-black">等待</span></td>
+                            <td class="p-5 text-right"><button onclick="remove(${item.id})" class="text-slate-300 hover:text-rose-500"><i class="fa-solid fa-trash-can"></i></button></td>
                         </tr>`);
                 }
             }
 
-            body.innerHTML = rows.length > 0 ? rows.join('') : '<tr><td colspan="5" class="p-10 text-center text-slate-300 italic text-xs tracking-widest uppercase">No Records Found</td></tr>';
+            body.innerHTML = rows.length > 0 ? rows.join('') : '<tr><td colspan="5" class="p-10 text-center text-slate-300 italic text-xs tracking-widest uppercase">無資料</td></tr>';
             
-            // 儀表板與圖表更新
+            // 更新儀表板
             const diff = totalMkt - totalCost;
             const diffPct = totalCost > 0 ? ((diff/totalCost)*100).toFixed(1) : 0;
             document.getElementById('total-mkt-val').innerText = `$ ${Math.round(totalMkt).toLocaleString()}`;
@@ -214,24 +212,37 @@
             updateChart(winCount, lossCount);
         }
 
+        // 🌟 修正後的完美圓形圖表邏輯
         function updateChart(win, loss) {
             const ctx = document.getElementById('winRateChart').getContext('2d');
             const total = win + loss;
+            // 如果沒有資料，顯示灰色圓圈；否則顯示綠色(勝)與灰色(敗)
+            const dataSet = total === 0 ? [1] : [win, loss];
+            const colorSet = total === 0 ? ['#f1f5f9'] : ['#10b981', '#cbd5e1'];
+            
             const winPct = total > 0 ? Math.round((win/total)*100) : 0;
             document.getElementById('win-pct').innerText = `${winPct}%`;
+            document.getElementById('win-pct').className = total > 0 ? "text-2xl font-black text-emerald-600" : "text-2xl font-black text-slate-300";
 
             if (chartInstance) chartInstance.destroy();
+            
             chartInstance = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     datasets: [{
-                        data: [win, loss || (total === 0 ? 1 : 0)],
-                        backgroundColor: ['#10b981', '#f1f5f9'],
+                        data: dataSet,
+                        backgroundColor: colorSet,
                         borderWidth: 0,
-                        cutout: '80%'
+                        hoverOffset: 4,
+                        borderRadius: 20 // 圓角讓圖表看起來更現代
                     }]
                 },
-                options: { plugins: { tooltip: { enabled: false } }, rotation: -90, circumference: 180 }
+                options: { 
+                    cutout: '85%', // 讓甜甜圈變細一點，比較優雅
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { tooltip: { enabled: false }, legend: { display: false } }
+                }
             });
         }
 
