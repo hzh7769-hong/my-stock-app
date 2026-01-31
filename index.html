@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AI 股票價值投資策略 v10.8</title>
+    <title>AI 股票價值投資策略 v10.9</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -33,7 +33,7 @@
             <div>
                 <h1 class="text-3xl md:text-4xl font-black text-slate-800 tracking-tighter">
                     股票價值投資策略 
-                    <span class="text-xs align-top bg-blue-50 text-blue-600 px-2 py-1 rounded-lg ml-1">v10.8</span>
+                    <span class="text-xs align-top bg-blue-50 text-blue-600 px-2 py-1 rounded-lg ml-1">v10.9</span>
                 </h1>
                 <p class="text-[10px] md:text-xs font-bold text-slate-400 tracking-[0.2em] mt-2 uppercase">AI Financial Intelligence Dashboard</p>
             </div>
@@ -45,7 +45,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div class="card p-6 flex flex-col items-center justify-center relative">
-                <p class="text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">投資組合勝率</p>
+                <p class="text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">庫存勝率</p>
                 <div class="w-32 h-32 relative">
                     <canvas id="winRateChart"></canvas>
                     <div class="absolute inset-0 flex items-center justify-center flex-col pointer-events-none">
@@ -67,7 +67,7 @@
                 </div>
                 <div class="absolute top-4 right-6">
                     <span id="cloud-status" class="text-[10px] font-black text-emerald-500 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
-                        <i class="fa-solid fa-cloud"></i> CLOUD SYNCED
+                        <i class="fa-solid fa-cloud"></i> SYNCED
                     </span>
                 </div>
             </div>
@@ -81,12 +81,20 @@
         <div class="card p-6 mb-8">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <input id="in-id" type="text" placeholder="股票代號 (如 2330)" class="w-full border-2 border-slate-100 p-4 rounded-xl font-bold focus:border-blue-500 outline-none">
-                <input id="in-qty" type="number" placeholder="持股張數" class="hold-field w-full border-2 border-slate-100 p-4 rounded-xl font-bold outline-none">
-                <input id="in-price" type="number" placeholder="買入成本" class="hold-field w-full border-2 border-slate-100 p-4 rounded-xl font-bold outline-none">
+                
+                <div class="hold-field w-full">
+                    <input id="in-qty" type="number" placeholder="持股張數" class="w-full border-2 border-slate-100 p-4 rounded-xl font-bold outline-none">
+                </div>
+                
+                <div class="w-full">
+                    <input id="in-price" type="number" placeholder="買入成本" class="w-full border-2 border-slate-100 p-4 rounded-xl font-bold outline-none">
+                </div>
+
                 <button id="add-btn" onclick="handleAdd()" class="w-full bg-slate-900 text-white rounded-xl font-black py-4 uppercase hover:bg-blue-600 transition-all shadow-lg active:scale-95">
-                    新增標的
+                    新增
                 </button>
             </div>
+            <p id="input-hint" class="text-xs text-slate-400 mt-2 ml-1 font-bold italic hidden md:block">💡 提示：在庫存模式輸入「成本」；在觀察模式輸入「目標買價」。</p>
         </div>
 
         <div class="card overflow-x-auto">
@@ -134,16 +142,20 @@
             } catch (e) { return null; }
         }
 
+        // --- 新增邏輯 (智慧判斷) ---
         async function handleAdd() {
             const id = document.getElementById('in-id').value.trim();
             const btn = document.getElementById('add-btn');
             if (!id) return;
 
             btn.disabled = true;
-            btn.innerText = "同步中...";
+            btn.innerText = "處理中...";
 
+            // 邏輯核心：
+            // 持股模式：Qty > 0, Price = 成本
+            // 觀察模式：Qty = 0 (強制), Price = 目標價
             const qty = currentTab === 'hold' ? (parseFloat(document.getElementById('in-qty').value) || 0) : 0;
-            const price = currentTab === 'hold' ? (parseFloat(document.getElementById('in-price').value) || 0) : 0;
+            const price = parseFloat(document.getElementById('in-price').value) || 0;
 
             const { error } = await _supabase.from('user_holdings').insert([{ stock_id: id, qty: qty, buy_price: price }]);
 
@@ -152,7 +164,7 @@
                 document.querySelectorAll('input').forEach(i => i.value = "");
             }
             btn.disabled = false;
-            btn.innerText = "新增標的";
+            btn.innerText = "新增";
         }
 
         async function remove(id) {
@@ -163,24 +175,39 @@
 
         function switchTab(t) {
             currentTab = t;
+            const qtyInput = document.querySelector('.hold-field');
+            const priceInput = document.getElementById('in-price');
+
             document.getElementById('tab-hold').className = t === 'hold' ? 'pb-3 tab-active' : 'pb-3';
             document.getElementById('tab-watch').className = t === 'watch' ? 'pb-3 tab-active' : 'pb-3';
-            document.querySelectorAll('.hold-field').forEach(el => el.style.display = t === 'hold' ? 'block' : 'none');
+            
+            // 介面微調
+            if(t === 'hold') {
+                qtyInput.style.display = 'block';
+                priceInput.placeholder = "買入成本";
+                document.getElementById('add-btn').innerText = "新增持股";
+            } else {
+                qtyInput.style.display = 'none'; // 觀察名單隱藏張數
+                priceInput.placeholder = "目標買價 (選填)";
+                document.getElementById('add-btn').innerText = "新增觀察";
+            }
             render();
         }
 
         async function render() {
             const body = document.getElementById('list-body');
             const head = document.getElementById('table-head');
-            body.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400 font-bold animate-pulse text-xs tracking-widest">SYNCING DATA...</td></tr>';
+            body.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400 font-bold animate-pulse text-xs tracking-widest">載入雲端數據...</td></tr>';
             
             let totalMkt = 0, totalCost = 0, winCount = 0, lossCount = 0;
-            const filtered = allData.filter(d => currentTab === 'hold' ? d.buy_price > 0 : d.buy_price <= 0);
+            
+            // 分類邏輯：張數 > 0 是持股，張數 = 0 是觀察
+            const filtered = allData.filter(d => currentTab === 'hold' ? d.qty > 0 : d.qty === 0);
 
             if (currentTab === 'hold') {
                 head.innerHTML = '<th class="p-5">標的</th><th class="p-5">現價</th><th class="p-5">損益%</th><th class="p-5 text-center mobile-hide">建議</th><th class="p-5 text-right">管理</th>';
             } else {
-                head.innerHTML = '<th class="p-5">觀察標的</th><th class="p-5">現價</th><th class="p-5">狀態</th><th class="p-5 text-center mobile-hide">決策</th><th class="p-5 text-right">管理</th>';
+                head.innerHTML = '<th class="p-5">觀察標的</th><th class="p-5">現價 / 目標</th><th class="p-5">價差狀態</th><th class="p-5 text-center mobile-hide">操作建議</th><th class="p-5 text-right">管理</th>';
             }
 
             const rows = [];
@@ -188,7 +215,13 @@
                 const live = await getPrice(item.stock_id);
                 const name = stockDB[item.stock_id] || "未知";
                 
+                // 產生 Yahoo 股市連結
+                const linkHtml = `<a href="https://tw.stock.yahoo.com/quote/${item.stock_id}" target="_blank" class="hover:text-blue-500 underline decoration-blue-500 underline-offset-4 flex items-center gap-2">
+                    ${item.stock_id} <i class="fa-solid fa-arrow-up-right-from-square text-[10px] opacity-50"></i>
+                </a>`;
+
                 if (currentTab === 'hold') {
+                    // 持股邏輯
                     const pnl = live - item.buy_price;
                     const pnlPct = ((pnl / item.buy_price) * 100).toFixed(1);
                     totalMkt += live * item.qty * 1000;
@@ -197,19 +230,49 @@
 
                     rows.push(`
                         <tr class="hover:bg-slate-50 transition-all">
-                            <td class="p-5 font-black text-slate-700">${item.stock_id}<br><span class="text-[10px] text-slate-400 font-bold">${name}</span></td>
+                            <td class="p-5 font-black text-slate-700">
+                                ${linkHtml}
+                                <span class="text-[10px] text-slate-400 font-bold">${name}</span>
+                            </td>
                             <td class="p-5 font-black text-lg text-blue-600">${live || '--'}</td>
                             <td class="p-5 font-black ${pnl >= 0 ? 'text-emerald-500' : 'text-rose-500'} text-lg">${pnlPct}%</td>
                             <td class="p-5 text-center mobile-hide"><span class="advice-badge bg-emerald-500 text-white italic">續抱</span></td>
                             <td class="p-5 text-right"><button onclick="remove(${item.id})" class="text-slate-300 hover:text-rose-500"><i class="fa-solid fa-trash-can"></i></button></td>
                         </tr>`);
                 } else {
+                    // 觀察邏輯 (智慧判斷)
+                    const targetPrice = item.buy_price; // 在觀察模式，資料庫的 buy_price 代表「目標價」
+                    let statusHtml = '<span class="text-slate-400 text-xs font-bold">純監控</span>';
+                    let adviceHtml = '<span class="advice-badge bg-slate-100 text-slate-400">觀察中</span>';
+                    let priceDisplay = `<span class="text-slate-400">${targetPrice > 0 ? targetPrice : '--'}</span>`;
+
+                    if (targetPrice > 0 && live) {
+                        if (live <= targetPrice) {
+                            // 到達買點
+                            statusHtml = `<span class="text-emerald-500 font-black animate-pulse">✨ 已達標</span>`;
+                            adviceHtml = `<span class="advice-badge bg-emerald-500 text-white font-bold shadow-lg shadow-emerald-200">建議買進</span>`;
+                        } else {
+                            // 還沒到
+                            const diff = ((live - targetPrice) / targetPrice * 100).toFixed(1);
+                            statusHtml = `<span class="text-slate-400 text-xs font-bold">差距 +${diff}%</span>`;
+                            adviceHtml = `<span class="advice-badge bg-slate-100 text-slate-500">等待</span>`;
+                        }
+                    }
+
                     rows.push(`
-                        <tr class="hover:bg-blue-50/50 transition-all">
-                            <td class="p-5 font-black text-slate-700">${item.stock_id}<br><span class="text-[10px] text-slate-400 font-bold">${name}</span></td>
-                            <td class="p-5 font-black text-lg text-slate-400">${live || '--'}</td>
-                            <td class="p-5 font-bold text-slate-300 italic text-xs uppercase">Monitor</td>
-                            <td class="p-5 text-center mobile-hide"><span class="advice-badge bg-slate-100 text-slate-400 font-black">等待</span></td>
+                        <tr class="hover:bg-blue-50/50 transition-all border-l-4 border-transparent hover:border-blue-400">
+                            <td class="p-5 font-black text-slate-700">
+                                ${linkHtml}
+                                <span class="text-[10px] text-slate-400 font-bold">${name}</span>
+                            </td>
+                            <td class="p-5 font-black text-lg">
+                                <div class="flex flex-col">
+                                    <span class="text-blue-600">${live || '--'}</span>
+                                    <span class="text-[10px] text-slate-400">目標: ${targetPrice > 0 ? targetPrice : '未設定'}</span>
+                                </div>
+                            </td>
+                            <td class="p-5">${statusHtml}</td>
+                            <td class="p-5 text-center mobile-hide">${adviceHtml}</td>
                             <td class="p-5 text-right"><button onclick="remove(${item.id})" class="text-slate-300 hover:text-rose-500"><i class="fa-solid fa-trash-can"></i></button></td>
                         </tr>`);
                 }
@@ -224,10 +287,9 @@
             document.getElementById('total-pnl-val').innerText = `${diff >= 0 ? '+' : ''}${Math.round(diff).toLocaleString()} (${diffPct}%)`;
             document.getElementById('total-pnl-val').className = `text-4xl font-black ${diff >= 0 ? 'text-emerald-500' : 'text-rose-500'}`;
             
-            updateChart(winCount, lossCount);
+            if(currentTab === 'hold') updateChart(winCount, lossCount);
         }
 
-        // 🌟 修正後的完美圓形圖表邏輯
         function updateChart(win, loss) {
             const ctx = document.getElementById('winRateChart').getContext('2d');
             const total = win + loss;
