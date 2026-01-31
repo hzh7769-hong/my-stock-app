@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AI 股票價值投資策略 v10.7</title>
+    <title>AI 股票價值投資策略 v10.8</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -20,14 +20,29 @@
             html { font-size: 14px; }
             .p-8 { padding: 1.25rem !important; }
             input { padding: 0.75rem !important; font-size: 1rem !important; }
-            /* 隱藏部分不重要的手機版表格欄位以防擁擠 */
-            .mobile-hide { display: none; } 
+            .mobile-hide { display: none; }
+            .title-area { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
         }
     </style>
 </head>
-<body class="p-3 md:p-8">
+<body class="p-4 md:p-8">
 
     <div class="max-w-6xl mx-auto">
+        
+        <div class="flex justify-between items-end mb-8 title-area">
+            <div>
+                <h1 class="text-3xl md:text-4xl font-black text-slate-800 tracking-tighter">
+                    股票價值投資策略 
+                    <span class="text-xs align-top bg-blue-50 text-blue-600 px-2 py-1 rounded-lg ml-1">v10.8</span>
+                </h1>
+                <p class="text-[10px] md:text-xs font-bold text-slate-400 tracking-[0.2em] mt-2 uppercase">AI Financial Intelligence Dashboard</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">System Online</span>
+            </div>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div class="card p-6 flex flex-col items-center justify-center relative">
                 <p class="text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">投資組合勝率</p>
@@ -216,7 +231,6 @@
         function updateChart(win, loss) {
             const ctx = document.getElementById('winRateChart').getContext('2d');
             const total = win + loss;
-            // 如果沒有資料，顯示灰色圓圈；否則顯示綠色(勝)與灰色(敗)
             const dataSet = total === 0 ? [1] : [win, loss];
             const colorSet = total === 0 ? ['#f1f5f9'] : ['#10b981', '#cbd5e1'];
             
@@ -234,11 +248,11 @@
                         backgroundColor: colorSet,
                         borderWidth: 0,
                         hoverOffset: 4,
-                        borderRadius: 20 // 圓角讓圖表看起來更現代
+                        borderRadius: 20
                     }]
                 },
                 options: { 
-                    cutout: '85%', // 讓甜甜圈變細一點，比較優雅
+                    cutout: '85%', 
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: { tooltip: { enabled: false }, legend: { display: false } }
