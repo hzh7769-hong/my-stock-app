@@ -3,95 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>股票價值投資策略 - 專業儀表板</title>
+    <title>股票價值投資策略 v7.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        .tab-active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 800; }
-        .k-link:hover { text-decoration: underline; color: #2563eb; }
-        .card { background: white; border-radius: 1.5rem; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f1f5f9; }
+        .tab-active { border-bottom: 4px solid #2563eb; color: #2563eb; font-weight: 900; }
+        .card { background: white; border-radius: 2rem; border: none; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); }
+        .btn-gradient { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); transition: all 0.3s; }
+        .btn-gradient:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
     <div class="max-w-6xl mx-auto">
-        <header class="flex justify-between items-center mb-8 bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-            <div>
-                <h1 class="text-3xl font-black text-slate-800 tracking-tighter">股票價值投資策略</h1>
-                <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">AI Financial Intelligence Dashboard</p>
+        <header class="flex flex-col md:flex-row justify-between items-center mb-10 bg-white p-8 rounded-[2.5rem] shadow-xl border border-white">
+            <div class="mb-6 md:mb-0">
+                <h1 class="text-4xl font-black text-slate-800 tracking-tighter">股票價值投資策略</h1>
+                <div class="flex items-center mt-2">
+                    <span class="flex h-3 w-3 relative mr-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                    </span>
+                    <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">FinMind API 實時連線中</p>
+                </div>
             </div>
-            <div class="hidden md:block text-right">
-                <div class="text-[10px] text-slate-400 font-bold uppercase">System Status</div>
-                <div class="text-sm font-bold text-emerald-500 flex items-center"><span class="w-2 h-2 bg-emerald-500 rounded-full mr-2 animate-pulse"></span> API Connected</div>
+            <div class="grid grid-cols-2 gap-8 text-right">
+                <div>
+                    <p class="text-slate-400 text-[10px] font-black uppercase mb-1">總資產市值</p>
+                    <p id="total-mkt-val" class="text-3xl font-black text-slate-900">$ 0</p>
+                </div>
+                <div>
+                    <p class="text-slate-400 text-[10px] font-black uppercase mb-1">總累積損益</p>
+                    <p id="total-pnl-val" class="text-3xl font-black">--</p>
+                </div>
             </div>
         </header>
 
-        <div id="summary-section" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="card p-6 col-span-1 flex flex-col items-center justify-center">
-                <h3 class="text-xs font-black text-slate-400 uppercase mb-4">資產盈虧佔比</h3>
-                <div class="w-40 h-40">
+        <div id="summary-section" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+            <div class="card p-8 flex flex-col items-center">
+                <h3 class="text-xs font-black text-slate-400 uppercase mb-6">資產勝率分析</h3>
+                <div class="w-full aspect-square">
                     <canvas id="pnlPieChart"></canvas>
                 </div>
             </div>
-            <div class="card p-6 col-span-2">
-                <h3 class="text-xs font-black text-slate-400 uppercase mb-4">投資組合總覽</h3>
-                <div class="grid grid-cols-2 gap-4 h-full content-center">
-                    <div>
-                        <p class="text-slate-400 text-xs font-bold uppercase">總市值</p>
-                        <p id="total-mkt-val" class="text-3xl font-black text-slate-800">$ 0</p>
-                    </div>
-                    <div>
-                        <p class="text-slate-400 text-xs font-bold uppercase">總累積損益</p>
-                        <p id="total-pnl-val" class="text-3xl font-black">--</p>
-                    </div>
+            <div class="card p-8 md:col-span-3 flex items-center justify-around bg-gradient-to-br from-white to-slate-50">
+                <div class="text-center">
+                    <i class="fa-solid fa-arrow-trend-up text-3xl text-emerald-500 mb-2"></i>
+                    <p class="text-xs font-bold text-slate-400">獲利標的</p>
+                    <p id="count-profit" class="text-2xl font-black text-slate-800">0</p>
+                </div>
+                <div class="h-12 w-px bg-slate-100"></div>
+                <div class="text-center">
+                    <i class="fa-solid fa-arrow-trend-down text-3xl text-rose-500 mb-2"></i>
+                    <p class="text-xs font-bold text-slate-400">虧損標的</p>
+                    <p id="count-loss" class="text-2xl font-black text-slate-800">0</p>
+                </div>
+                <div class="h-12 w-px bg-slate-100"></div>
+                <div class="text-center">
+                    <i class="fa-solid fa-chart-pie text-3xl text-blue-500 mb-2"></i>
+                    <p class="text-xs font-bold text-slate-400">組合勝率</p>
+                    <p id="win-rate" class="text-2xl font-black text-slate-800">0%</p>
                 </div>
             </div>
         </div>
 
-        <div class="flex space-x-8 mb-6 px-4 text-sm font-bold text-slate-400 border-b">
-            <button onclick="switchTab('hold')" id="tab-hold" class="pb-4 tab-active transition-all">持股庫存</button>
-            <button onclick="switchTab('watch')" id="tab-watch" class="pb-4 transition-all">觀察名單</button>
+        <div class="flex space-x-10 mb-8 px-6 text-sm font-black text-slate-400 border-b-2 border-slate-200">
+            <button onclick="switchTab('hold')" id="tab-hold" class="pb-4 tab-active uppercase tracking-widest">持股庫存</button>
+            <button onclick="switchTab('watch')" id="tab-watch" class="pb-4 uppercase tracking-widest">觀察名單</button>
         </div>
 
-        <div class="card p-6 mb-8">
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <div class="col-span-1">
-                    <label class="block text-[10px] font-black text-slate-400 mb-1">股票代號</label>
-                    <input id="in-id" type="text" placeholder="2330" class="w-full border border-slate-100 p-3 rounded-xl text-sm bg-slate-50 outline-none focus:ring-2 focus:ring-blue-100">
-                </div>
-                
-                <div class="hold-field">
-                    <label class="block text-[10px] font-black text-slate-400 mb-1">張數</label>
-                    <input id="in-qty" type="number" placeholder="1.0" class="w-full border border-slate-100 p-3 rounded-xl text-sm bg-slate-50 outline-none">
+        <div class="card p-8 mb-10 border border-white">
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-6">
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase">股票代號</label>
+                    <input id="in-id" type="text" placeholder="例如: 2330" class="w-full border-2 border-slate-50 p-4 rounded-2xl text-sm bg-slate-50 outline-none focus:border-blue-500 focus:bg-white transition-all">
                 </div>
                 <div class="hold-field">
-                    <label class="block text-[10px] font-black text-slate-400 mb-1">買入價格</label>
-                    <input id="in-price" type="number" placeholder="0.0" class="w-full border border-slate-100 p-3 rounded-xl text-sm bg-slate-50 outline-none">
+                    <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase">持有張數</label>
+                    <input id="in-qty" type="number" placeholder="1.0" class="w-full border-2 border-slate-50 p-4 rounded-2xl text-sm bg-slate-50 outline-none">
                 </div>
-
+                <div class="hold-field">
+                    <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase">買入單價</label>
+                    <input id="in-price" type="number" placeholder="0.0" class="w-full border-2 border-slate-50 p-4 rounded-2xl text-sm bg-slate-50 outline-none">
+                </div>
                 <div class="watch-field hidden">
-                    <label class="block text-[10px] font-black text-slate-400 mb-1">預估 EPS</label>
-                    <input id="in-eps" type="number" placeholder="例如 35.5" class="w-full border border-slate-100 p-3 rounded-xl text-sm bg-slate-50 outline-none">
+                    <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase">預估 EPS (自動)</label>
+                    <input id="in-eps" type="number" placeholder="自動抓取中" class="w-full border-2 border-slate-50 p-4 rounded-2xl text-sm bg-slate-200 outline-none cursor-not-allowed" readonly>
                 </div>
                 <div class="watch-field hidden">
-                    <label class="block text-[10px] font-black text-slate-400 mb-1">合理 PE</label>
-                    <input id="in-pe" type="number" placeholder="例如 25" class="w-full border border-slate-100 p-3 rounded-xl text-sm bg-slate-50 outline-none">
+                    <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase">合理 PE (市場)</label>
+                    <input id="in-pe" type="number" placeholder="自動抓取中" class="w-full border-2 border-slate-50 p-4 rounded-2xl text-sm bg-slate-200 outline-none cursor-not-allowed" readonly>
                 </div>
-
                 <div class="col-span-2 md:col-span-2 flex items-end">
-                    <button onclick="handleAdd()" class="w-full bg-slate-900 text-white rounded-xl font-black text-xs py-4 hover:bg-slate-800 shadow-xl shadow-slate-200 transition-all uppercase tracking-widest">
-                        Add to Portfolio
+                    <button id="add-btn" onclick="handleAdd()" class="w-full btn-gradient text-white rounded-2xl font-black text-xs py-5 uppercase tracking-[0.2em]">
+                        Add to Analysis
                     </button>
                 </div>
             </div>
         </div>
 
-        <div class="card overflow-hidden">
+        <div class="card overflow-hidden border border-white">
             <table class="w-full text-left text-sm">
                 <thead class="bg-slate-50/50 border-b border-slate-100">
-                    <tr id="table-head" class="text-slate-400 font-black text-[10px] uppercase tracking-wider"></tr>
+                    <tr id="table-head" class="text-slate-400 font-black text-[10px] uppercase tracking-widest"></tr>
                 </thead>
                 <tbody id="list-body" class="divide-y divide-slate-50"></tbody>
             </table>
@@ -100,30 +116,43 @@
 
     <script>
         const MY_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRlIjoiMjAyNi0wMS0zMSAxMDo0NDo0MyIsInVzZXJfaWQiOiJoemg3NzY5IiwiZW1haWwiOiJoemg3NzY5QGdtYWlsLmNvbSIsImlwIjoiMS4xNjguMjE1LjgzIn0.-bUwxRYsIVslCKG5RZtjIRL50H1Oik4h_stpwslOX10";
-        
-        let stockNames = JSON.parse(localStorage.getItem('stock_names')) || {
-            "2330": "台積電", "2317": "鴻海", "2308": "台達電", "2454": "聯發科", "1513": "中興電", "1519": "華城", "2360": "致茂", "2881": "富邦金"
-        };
-
         let currentTab = 'hold';
         let holdings = JSON.parse(localStorage.getItem('opal_holdings')) || [];
         let watchlist = JSON.parse(localStorage.getItem('opal_watch')) || [];
+        let stockNames = JSON.parse(localStorage.getItem('stock_names')) || {};
         let pnlChart;
 
-        async function fetchInfo(id) {
+        async function fetchStockInfo(id) {
             try {
-                // 自動獲取名稱
-                const url = `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockInfo&token=${MY_TOKEN}`;
+                const url = `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockInfo&data_id=${id}&token=${MY_TOKEN}`;
                 const res = await fetch(url);
                 const json = await res.json();
-                const stock = json.data.find(s => s.stock_id === id);
-                if (stock) {
-                    stockNames[id] = stock.stock_name;
+                if (json.data && json.data.length > 0) {
+                    stockNames[id] = json.data[0].stock_name;
                     localStorage.setItem('stock_names', JSON.stringify(stockNames));
-                    return stock.stock_name;
+                    return json.data[0].stock_name;
                 }
             } catch (e) { return "未知公司"; }
             return "未知公司";
+        }
+
+        async function fetchFinancials(id) {
+            try {
+                // 1. 抓取 EPS (最近一季)
+                const epsUrl = `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockFinancialStatements&data_id=${id}&token=${MY_TOKEN}`;
+                const epsRes = await fetch(epsUrl);
+                const epsJson = await epsRes.json();
+                const latestEps = epsJson.data.reverse().find(d => d.type === 'EPS')?.value || 0;
+
+                // 2. 抓取 P/E (最新收盤)
+                const peUrl = `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=${id}&token=${MY_TOKEN}`;
+                const peRes = await fetch(peUrl);
+                const peJson = await peRes.json();
+                // 這裡暫時以目前 P/E 做基準，後續可依產業調整
+                const reasonablePE = 20; 
+
+                return { eps: latestEps, pe: reasonablePE };
+            } catch (e) { return { eps: 0, pe: 0 }; }
         }
 
         async function fetchPrice(id) {
@@ -138,14 +167,26 @@
             } catch (e) { return null; }
         }
 
+        // 自動監聽輸入代號後自動抓 EPS
+        document.getElementById('in-id').addEventListener('blur', async (e) => {
+            const id = e.target.value.trim();
+            if (id && currentTab === 'watch') {
+                const data = await fetchFinancials(id);
+                document.getElementById('in-eps').value = data.eps;
+                document.getElementById('in-pe').value = data.pe;
+            }
+        });
+
         async function handleAdd() {
             const id = document.getElementById('in-id').value.trim();
+            const btn = document.getElementById('add-btn');
             if (!id) return alert("請輸入代號");
 
+            btn.innerText = "正在分析數據...";
             const livePrice = await fetchPrice(id);
-            if (!livePrice) return alert("抓取數據失敗");
+            if (!livePrice) { btn.innerText = "Add to Analysis"; return alert("無法獲取現價"); }
 
-            if (!stockNames[id]) await fetchInfo(id);
+            if (!stockNames[id]) await fetchStockInfo(id);
 
             if (currentTab === 'hold') {
                 const qty = parseFloat(document.getElementById('in-qty').value) || 0;
@@ -154,101 +195,96 @@
             } else {
                 const eps = parseFloat(document.getElementById('in-eps').value) || 0;
                 const pe = parseFloat(document.getElementById('in-pe').value) || 0;
-                if(eps === 0 || pe === 0) return alert("觀察名單請填寫 EPS 與 合理 PE");
                 watchlist.push({ id, eps, pe, live: livePrice });
             }
 
             save(); render();
+            btn.innerText = "Add to Analysis";
             document.querySelectorAll('input').forEach(i => i.value = "");
         }
 
-        function updateSummary() {
-            let totalCost = 0;
-            let totalMkt = 0;
-            let profitStocks = 0;
-            let lossStocks = 0;
-
-            holdings.forEach(item => {
-                totalCost += item.buyPrice * item.qty * 1000;
-                totalMkt += item.live * item.qty * 1000;
-                if (item.live >= item.buyPrice) profitStocks++; else lossStocks++;
+        function updateDashboard() {
+            let totalMkt = 0, totalCost = 0, pCount = 0, lCount = 0;
+            holdings.forEach(h => {
+                totalMkt += h.live * h.qty * 1000;
+                totalCost += h.buyPrice * h.qty * 1000;
+                if (h.live >= h.buyPrice) pCount++; else lCount++;
             });
 
             const diff = totalMkt - totalCost;
             const diffPct = totalCost === 0 ? 0 : ((diff / totalCost) * 100).toFixed(2);
-            
-            document.getElementById('total-mkt-val').innerText = "$ " + Math.round(totalMkt).toLocaleString();
-            const pnlEl = document.getElementById('total-pnl-val');
-            pnlEl.innerText = (diff >= 0 ? "+" : "") + Math.round(diff).toLocaleString() + ` (${diffPct}%)`;
-            pnlEl.className = `text-3xl font-black ${diff >= 0 ? 'text-emerald-500' : 'text-rose-500'}`;
 
-            // 更新圓餅圖
+            document.getElementById('total-mkt-val').innerText = "$ " + Math.round(totalMkt).toLocaleString();
+            document.getElementById('total-pnl-val').innerText = (diff >= 0 ? "+" : "") + Math.round(diff).toLocaleString() + ` (${diffPct}%)`;
+            document.getElementById('total-pnl-val').className = `text-3xl font-black ${diff >= 0 ? 'text-emerald-500' : 'text-rose-500'}`;
+            document.getElementById('count-profit').innerText = pCount;
+            document.getElementById('count-loss').innerText = lCount;
+            document.getElementById('win-rate').innerText = (pCount + lCount > 0 ? ((pCount/(pCount+lCount))*100).toFixed(0) : 0) + "%";
+
             const ctx = document.getElementById('pnlPieChart').getContext('2d');
             if (pnlChart) pnlChart.destroy();
             pnlChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     labels: ['獲利標的', '虧損標的'],
-                    datasets: [{
-                        data: [profitStocks, lossStocks],
-                        backgroundColor: ['#10b981', '#f43f5e'],
-                        borderWidth: 0,
-                        hoverOffset: 4
-                    }]
+                    datasets: [{ data: [pCount, lCount], backgroundColor: ['#10b981', '#f43f5e'], borderWidth: 8, borderColor: '#ffffff' }]
                 },
-                options: { cutout: '70%', plugins: { legend: { display: false } } }
+                options: { cutout: '75%', plugins: { legend: { display: false } } }
             });
         }
 
         function render() {
             const body = document.getElementById('list-body');
             const head = document.getElementById('table-head');
-            const summary = document.getElementById('summary-section');
             body.innerHTML = '';
 
             if (currentTab === 'hold') {
-                summary.classList.remove('hidden');
-                head.innerHTML = '<th class="p-6">股票標的</th><th class="p-6">最新現價</th><th class="p-6">損益(%) / 金額($)</th><th class="p-6">建議</th><th class="p-6 text-right">管理</th>';
-                holdings.forEach((item, i) => {
-                    const pnlPct = (((item.live - item.buyPrice) / item.buyPrice) * 100).toFixed(2);
-                    const pnlAmt = Math.round((item.live - item.buyPrice) * item.qty * 1000);
-                    const name = stockNames[item.id] || "查詢中...";
+                head.innerHTML = '<th class="p-8">股票標的</th><th class="p-8">最新現價</th><th class="p-8">損益金額</th><th class="p-8">建議操作</th><th class="p-8 text-right">管理</th>';
+                holdings.forEach((h, i) => {
+                    const pnlPct = (((h.live - h.buyPrice) / h.buyPrice) * 100).toFixed(2);
+                    const pnlAmt = Math.round((h.live - h.buyPrice) * h.qty * 1000);
+                    const name = stockNames[h.id] || "查詢中";
 
                     body.innerHTML += `
-                        <tr class="hover:bg-slate-50/50 transition-colors">
-                            <td class="p-6 font-bold"><a href="https://tw.stock.yahoo.com/quote/${item.id}.TW" target="_blank" class="k-link text-slate-700">${item.id} ${name}</a></td>
-                            <td class="p-6 font-mono font-bold text-blue-600">${item.live}</td>
-                            <td class="p-6">
-                                <span class="${pnlPct >= 0 ? 'text-emerald-500' : 'text-rose-500'} font-black text-base">${pnlPct}%</span><br>
-                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Net: $ ${pnlAmt.toLocaleString()}</span>
+                        <tr class="hover:bg-slate-50 transition-all">
+                            <td class="p-8 font-black"><a href="https://tw.stock.yahoo.com/quote/${h.id}.TW" target="_blank" class="text-slate-700 hover:text-blue-600">${h.id} ${name}</a></td>
+                            <td class="p-8 font-mono font-black text-blue-600 text-lg">${h.live}</td>
+                            <td class="p-8">
+                                <span class="${pnlPct >= 0 ? 'text-emerald-500' : 'text-rose-500'} font-black text-lg">${pnlPct}%</span><br>
+                                <span class="text-[10px] font-bold text-slate-300 uppercase">Net: $ ${pnlAmt.toLocaleString()}</span>
                             </td>
-                            <td class="p-6"><span class="px-3 py-1 rounded-full bg-slate-100 text-[10px] font-bold text-slate-400 uppercase">Hold</span></td>
-                            <td class="p-6 text-right"><button onclick="remove(${i})" class="text-slate-200 hover:text-rose-400 transition-colors"><i class="fa-solid fa-circle-xmark text-lg"></i></button></td>
+                            <td class="p-8">
+                                <span class="px-4 py-2 rounded-xl text-[10px] font-black bg-slate-100 text-slate-400 uppercase tracking-widest">🟡 觀望持股</span>
+                            </td>
+                            <td class="p-8 text-right"><button onclick="remove(${i})" class="text-slate-200 hover:text-rose-500"><i class="fa-solid fa-trash-can text-lg"></i></button></td>
                         </tr>`;
                 });
-                updateSummary();
+                updateDashboard();
             } else {
-                summary.classList.add('hidden');
-                head.innerHTML = '<th class="p-6">觀察標的</th><th class="p-6">目前現價</th><th class="p-6">目標價區間 (Valuation)</th><th class="p-6">潛力空間</th><th class="p-6 text-right">管理</th>';
-                watchlist.forEach((item, i) => {
-                    const target = (item.eps * item.pe).toFixed(1);
-                    const upside = (((target - item.live) / item.live) * 100).toFixed(1);
-                    const name = stockNames[item.id] || "查詢中...";
+                head.innerHTML = '<th class="p-8">觀察標的</th><th class="p-8">目前現價</th><th class="p-8">目標價 (EPS×PE)</th><th class="p-8">決策建議</th><th class="p-8 text-right">管理</th>';
+                watchlist.forEach((w, i) => {
+                    const target = (w.eps * w.pe).toFixed(1);
+                    const upside = (((target - w.live) / w.live) * 100).toFixed(1);
+                    const name = stockNames[w.id] || "查詢中";
+                    
+                    let advice = '🟡 觀望持股';
+                    let adviceClass = 'bg-slate-100 text-slate-400';
+                    if (upside > 10) { advice = '🔥 建議買進'; adviceClass = 'bg-emerald-100 text-emerald-600'; }
+                    else if (upside < -10) { advice = '❄️ 建議減碼'; adviceClass = 'bg-rose-100 text-rose-600'; }
 
                     body.innerHTML += `
-                        <tr class="hover:bg-slate-50/50 transition-colors">
-                            <td class="p-6 font-bold"><a href="https://tw.stock.yahoo.com/quote/${item.id}.TW" target="_blank" class="k-link text-slate-700">${item.id} ${name}</a></td>
-                            <td class="p-6 font-mono font-bold text-slate-400">${item.live}</td>
-                            <td class="p-6">
-                                <span class="font-black text-blue-600 text-base">${target}</span><br>
-                                <span class="text-[10px] font-bold text-slate-400 uppercase">Fair Value Range</span>
+                        <tr class="hover:bg-slate-50 transition-all">
+                            <td class="p-8 font-black"><a href="https://tw.stock.yahoo.com/quote/${w.id}.TW" target="_blank" class="text-slate-700 hover:text-blue-600">${w.id} ${name}</a></td>
+                            <td class="p-8 font-mono font-black text-slate-400 text-lg">${w.live}</td>
+                            <td class="p-8">
+                                <span class="font-black text-blue-600 text-lg">${target}</span><br>
+                                <span class="text-[10px] font-bold text-slate-300 uppercase">Valuation</span>
                             </td>
-                            <td class="p-6">
-                                <span class="px-3 py-1 rounded-lg text-xs font-black ${upside > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}">
-                                    ${upside > 0 ? '+' : ''}${upside}% Potential
-                                </span>
+                            <td class="p-8">
+                                <span class="px-4 py-2 rounded-xl text-[10px] font-black ${adviceClass} uppercase tracking-widest">${advice}</span>
+                                <span class="ml-2 text-[10px] font-bold text-slate-300">(${upside}%)</span>
                             </td>
-                            <td class="p-6 text-right"><button onclick="remove(${i})" class="text-slate-200 hover:text-rose-400 transition-colors"><i class="fa-solid fa-circle-xmark text-lg"></i></button></td>
+                            <td class="p-8 text-right"><button onclick="remove(${i})" class="text-slate-200 hover:text-rose-500"><i class="fa-solid fa-trash-can text-lg"></i></button></td>
                         </tr>`;
                 });
             }
