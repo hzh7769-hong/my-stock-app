@@ -138,28 +138,36 @@
         }
 
         async function handleAdd() {
-            const id = document.getElementById('in-id').value.trim();
-            const qty = parseFloat(document.getElementById('in-qty').value) || 0;
-            const price = parseFloat(document.getElementById('in-price').value) || 0;
-            
-            if (!id) return;
-            document.getElementById('add-btn').innerText = "同步至雲端...";
+    const id = document.getElementById('in-id').value.trim();
+    const qty = parseFloat(document.getElementById('in-qty').value) || 0;
+    const price = parseFloat(document.getElementById('in-price').value) || 0;
+    
+    if (!id) return;
+    const btn = document.getElementById('add-btn');
+    btn.innerText = "雲端寫入中...";
 
-            // 寫入 Supabase
-            const { data, error } = await _supabase.from('user_holdings').insert([
-                { stock_id: id, qty: qty, buy_price: price }
-            ]).select();
+    // 🚀 v10.1 強化版寫入邏輯
+    const { data, error } = await _supabase
+        .from('user_holdings')
+        .insert([{ 
+            stock_id: id, 
+            qty: qty, 
+            buy_price: price 
+        }])
+        .select();
 
-            if (!error) {
-                await fetchFromCloud();
-                render();
-                document.getElementById('add-btn').innerText = "雲端同步新增";
-                document.querySelectorAll('input').forEach(i => i.value = "");
-            } else {
-                alert("寫入失敗，請確認資料表欄位名稱是否正確。");
-                document.getElementById('add-btn').innerText = "重試新增";
-            }
-        }
+    if (error) {
+        console.error("Supabase Error Details:", error); // 在開發者工具查看具體錯誤
+        alert(`寫入失敗！原因：${error.message}`); 
+        btn.innerText = "重試新增";
+    } else {
+        await fetchFromCloud(); // 重新抓取雲端最新狀態
+        render();
+        btn.innerText = "雲端同步成功！";
+        setTimeout(() => btn.innerText = "雲端同步新增", 2000);
+        document.querySelectorAll('input').forEach(i => i.value = "");
+    }
+}
 
         async function remove(db_id) {
             if(!confirm("確定要從雲端刪除此標的嗎？")) return;
@@ -218,3 +226,4 @@
     </script>
 </body>
 </html>
+
