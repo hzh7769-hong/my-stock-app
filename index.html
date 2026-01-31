@@ -68,17 +68,29 @@
         let watchlist = JSON.parse(localStorage.getItem('opal_watch')) || [];
 
         async function fetchPrice(id) {
-            try {
-                const today = new Date().toISOString().split('T')[0];
-                const url = `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=${id}&start_date=${today}&token=${MY_TOKEN}`;
-                const res = await fetch(url);
-                const json = await res.json();
-                if (json.data && json.data.length > 0) {
-                    return json.data[json.data.length - 1].close;
-                }
-            } catch (e) { console.error("抓取失敗"); }
-            return null;
+    try {
+        // 自動嘗試最近 5 天的數據（解決假日沒資料的問題）
+        const pastDate = new Date();
+        pastDate.setDate(pastDate.getDate() - 5); 
+        const startDate = pastDate.toISOString().split('T')[0];
+        
+        const url = `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=${id}&start_date=${startDate}&token=${MY_TOKEN}`;
+        
+        const res = await fetch(url);
+        const json = await res.json();
+        
+        if (json.msg === "success" && json.data.length > 0) {
+            // 抓取該陣列中最後一筆（最新）的收盤價
+            return json.data[json.data.length - 1].close;
+        } else if (json.msg !== "success") {
+            console.error("FinMind 驗證錯誤：" + json.msg);
+            alert("API 帳號可能尚未啟用，請檢查驗證信！");
         }
+    } catch (e) { 
+        console.error("連線異常"); 
+    }
+    return "驗證中";
+}
 
         async function handleAdd() {
             const id = document.getElementById('in-id').value.trim();
@@ -158,3 +170,4 @@
     </script>
 </body>
 </html>
+
