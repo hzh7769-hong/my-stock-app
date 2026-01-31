@@ -3,25 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OPAL 股票策略 - 真實數據版</title>
+    <title>股票價值投資策略</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         .tab-active { border-bottom: 2px solid #2563eb; color: #2563eb; font-weight: bold; }
+        .k-link:hover { text-decoration: underline; color: #2563eb; }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
-    <div class="max-w-4xl mx-auto">
+    <div class="max-w-5xl mx-auto">
         <header class="flex justify-between items-center mb-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
             <div>
-                <h1 class="text-2xl font-black text-slate-800 tracking-tight">OPAL <span class="text-blue-600">INVEST</span></h1>
+                <h1 class="text-2xl font-black text-slate-800 tracking-tight">股票價值投資策略</h1>
                 <p class="text-xs text-slate-400 font-medium uppercase tracking-widest mt-1">Real-time Financial Engine</p>
             </div>
-            <div id="connection-status" class="text-[10px] bg-emerald-100 text-emerald-600 px-2 py-1 rounded-full font-bold">
-                ● API 已連線
-            </div>
+            <div class="text-[10px] bg-emerald-100 text-emerald-600 px-3 py-1 rounded-full font-bold">● API 數據已連線</div>
         </header>
 
         <div class="flex space-x-6 mb-6 px-2 text-sm text-slate-400 border-b">
@@ -30,134 +29,139 @@
         </div>
 
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 mb-8">
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <input id="in-id" type="text" placeholder="股票代號 (如 2330)" class="border border-slate-200 p-3 rounded-xl text-sm outline-none focus:border-blue-500 transition">
-                <input id="in-qty" type="number" placeholder="持股張數" class="border border-slate-200 p-3 rounded-xl text-sm outline-none">
-                <input id="in-price" type="number" placeholder="買入單價" class="border border-slate-200 p-3 rounded-xl text-sm outline-none">
-                <button onclick="handleAdd()" class="bg-blue-600 text-white rounded-xl font-bold text-sm py-3 hover:bg-blue-700 shadow-lg shadow-blue-100 transition">加入清單</button>
+            <div id="input-fields" class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <input id="in-id" type="text" placeholder="股票代號" class="border p-3 rounded-xl text-sm outline-none focus:border-blue-500">
+                
+                <input id="in-qty" type="number" placeholder="張數" class="hold-field border p-3 rounded-xl text-sm outline-none">
+                <input id="in-price" type="number" placeholder="買入單價" class="hold-field border p-3 rounded-xl text-sm outline-none">
+                
+                <input id="in-eps" type="number" placeholder="預估 EPS" class="watch-field hidden border p-3 rounded-xl text-sm outline-none">
+                <input id="in-pe" type="number" placeholder="合理 PE" class="watch-field hidden border p-3 rounded-xl text-sm outline-none">
+                
+                <button onclick="handleAdd()" class="md:col-span-1 bg-blue-600 text-white rounded-xl font-bold text-sm py-3 hover:bg-blue-700 shadow-lg shadow-blue-100 transition">加入清單</button>
             </div>
         </div>
 
         <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
             <table class="w-full text-left text-sm">
                 <thead class="bg-slate-50 border-b border-slate-100">
-                    <tr class="text-slate-400 font-bold text-[11px] uppercase">
-                        <th class="p-5">股票標的</th>
-                        <th class="p-5">最新現價</th>
-                        <th class="p-5">損益 / 狀態</th>
-                        <th class="p-5">策略建議 (RSI)</th>
-                        <th class="p-5 text-right">管理</th>
-                    </tr>
+                    <tr id="table-head" class="text-slate-400 font-bold text-[11px] uppercase">
+                        </tr>
                 </thead>
-                <tbody id="list-body" class="divide-y divide-slate-50">
-                    </tbody>
+                <tbody id="list-body" class="divide-y divide-slate-50"></tbody>
             </table>
         </div>
-        
-        <footer class="mt-6 text-center">
-            <p class="text-[10px] text-slate-300">數據來源：FinMind API | 策略邏輯：Google OPAL</p>
-        </footer>
     </div>
 
     <script>
-        // 老師已幫你填入 Token
         const MY_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRlIjoiMjAyNi0wMS0zMSAxMDo0NDo0MyIsInVzZXJfaWQiOiJoemg3NzY5IiwiZW1haWwiOiJoemg3NzY5QGdtYWlsLmNvbSIsImlwIjoiMS4xNjguMjE1LjgzIn0.-bUwxRYsIVslCKG5RZtjIRL50H1Oik4h_stpwslOX10";
         
+        // 公司名稱對照表
+        const stockNames = {
+            "2330": "台積電", "2317": "鴻海", "2308": "台達電", "2454": "聯發科", 
+            "1513": "中興電", "1519": "華城", "2360": "致茂", "2881": "富邦金"
+        };
+
         let currentTab = 'hold';
         let holdings = JSON.parse(localStorage.getItem('opal_holdings')) || [];
         let watchlist = JSON.parse(localStorage.getItem('opal_watch')) || [];
 
         async function fetchPrice(id) {
-    try {
-        // 自動嘗試最近 5 天的數據（解決假日沒資料的問題）
-        const pastDate = new Date();
-        pastDate.setDate(pastDate.getDate() - 5); 
-        const startDate = pastDate.toISOString().split('T')[0];
-        
-        const url = `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=${id}&start_date=${startDate}&token=${MY_TOKEN}`;
-        
-        const res = await fetch(url);
-        const json = await res.json();
-        
-        if (json.msg === "success" && json.data.length > 0) {
-            // 抓取該陣列中最後一筆（最新）的收盤價
-            return json.data[json.data.length - 1].close;
-        } else if (json.msg !== "success") {
-            console.error("FinMind 驗證錯誤：" + json.msg);
-            alert("API 帳號可能尚未啟用，請檢查驗證信！");
+            try {
+                const pastDate = new Date();
+                pastDate.setDate(pastDate.getDate() - 5); 
+                const startDate = pastDate.toISOString().split('T')[0];
+                const url = `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=${id}&start_date=${startDate}&token=${MY_TOKEN}`;
+                const res = await fetch(url);
+                const json = await res.json();
+                return (json.data && json.data.length > 0) ? json.data[json.data.length - 1].close : null;
+            } catch (e) { return null; }
         }
-    } catch (e) { 
-        console.error("連線異常"); 
-    }
-    return "驗證中";
-}
 
         async function handleAdd() {
             const id = document.getElementById('in-id').value.trim();
-            const qty = parseFloat(document.getElementById('in-qty').value) || 0;
-            const price = parseFloat(document.getElementById('in-price').value) || 0;
-
             if (!id) return alert("請輸入代號");
 
-            // 顯示載入中狀態
-            const btn = event.target;
-            btn.innerText = "抓取中...";
-            
             const livePrice = await fetchPrice(id);
-            const newItem = { id, qty, buyPrice: price, live: livePrice || "無數據" };
+            if (!livePrice) return alert("抓取數據失敗，請檢查代號或 Token 驗證狀態");
 
-            if (currentTab === 'hold') holdings.push(newItem);
-            else watchlist.push(newItem);
+            if (currentTab === 'hold') {
+                const qty = parseFloat(document.getElementById('in-qty').value) || 0;
+                const price = parseFloat(document.getElementById('in-price').value) || 0;
+                holdings.push({ id, qty, buyPrice: price, live: livePrice });
+            } else {
+                const eps = parseFloat(document.getElementById('in-eps').value) || 0;
+                const pe = parseFloat(document.getElementById('in-pe').value) || 0;
+                watchlist.push({ id, eps, pe, live: livePrice });
+            }
 
-            save();
-            render();
-            btn.innerText = "加入清單";
-            document.getElementById('in-id').value = "";
+            save(); render();
+            document.querySelectorAll('input').forEach(i => i.value = "");
         }
 
         function render() {
-            const list = currentTab === 'hold' ? holdings : watchlist;
             const body = document.getElementById('list-body');
+            const head = document.getElementById('table-head');
             body.innerHTML = '';
 
-            list.forEach((item, index) => {
-                const pnl = (item.buyPrice > 0 && typeof item.live === 'number') 
-                    ? (((item.live - item.buyPrice) / item.buyPrice) * 100).toFixed(2) 
-                    : null;
-                
-                // 模擬 RSI，待之後實作 14 天數據抓取
-                const rsi = Math.floor(Math.random() * 50) + 15;
+            if (currentTab === 'hold') {
+                head.innerHTML = '<th class="p-5">股票標的</th><th class="p-5">最新現價</th><th class="p-5">損益(%) / 金額($)</th><th class="p-5">建議</th><th class="p-5 text-right">管理</th>';
+                holdings.forEach((item, i) => {
+                    const pnlPercent = (((item.live - item.buyPrice) / item.buyPrice) * 100).toFixed(2);
+                    const pnlAmount = Math.round((item.live - item.buyPrice) * item.qty * 1000);
+                    const name = stockNames[item.id] || "未知公司";
 
-                body.innerHTML += `
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="p-5 font-bold text-slate-700">${item.id}</td>
-                        <td class="p-5 font-mono text-blue-600">${item.live}</td>
-                        <td class="p-5">
-                            ${pnl !== null ? `<span class="${pnl >= 0 ? 'text-emerald-500' : 'text-rose-500'} font-bold">${pnl}%</span>` : '<span class="text-slate-300">監控中</span>'}
-                        </td>
-                        <td class="p-5">
-                            <span class="px-2 py-1 rounded-md text-[10px] font-bold ${rsi < 20 ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}">
-                                ${rsi < 20 ? '🔥 價值買點' : '🟡 續抱'} (RSI:${rsi})
-                            </span>
-                        </td>
-                        <td class="p-5 text-right">
-                            <button onclick="remove(${index})" class="text-slate-200 hover:text-rose-400 transition"><i class="fa-solid fa-trash-can"></i></button>
-                        </td>
-                    </tr>
-                `;
-            });
+                    body.innerHTML += `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="p-5 font-bold"><a href="https://tw.stock.yahoo.com/quote/${item.id}.TW" target="_blank" class="k-link">${item.id} ${name}</a></td>
+                            <td class="p-5 font-mono text-blue-600">${item.live}</td>
+                            <td class="p-5">
+                                <span class="${pnlPercent >= 0 ? 'text-emerald-500' : 'text-rose-500'} font-bold">${pnlPercent}%</span><br>
+                                <span class="text-[10px] text-slate-400">$ ${pnlAmount.toLocaleString()}</span>
+                            </td>
+                            <td class="p-5"><span class="px-2 py-1 rounded bg-slate-100 text-[10px] text-slate-400">續抱</span></td>
+                            <td class="p-5 text-right"><button onclick="remove(${i})" class="text-slate-200 hover:text-rose-400"><i class="fa-solid fa-trash-can"></i></button></td>
+                        </tr>`;
+                });
+            } else {
+                head.innerHTML = '<th class="p-5">觀察標的</th><th class="p-5">目前現價</th><th class="p-5">目標價區間 (Valuation)</th><th class="p-5">潛力空間</th><th class="p-5 text-right">管理</th>';
+                watchlist.forEach((item, i) => {
+                    const targetPrice = (item.eps * item.pe).toFixed(1);
+                    const upside = (((targetPrice - item.live) / item.live) * 100).toFixed(1);
+                    const name = stockNames[item.id] || "未知公司";
+
+                    body.innerHTML += `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="p-5 font-bold"><a href="https://tw.stock.yahoo.com/quote/${item.id}.TW" target="_blank" class="k-link">${item.id} ${name}</a></td>
+                            <td class="p-5 font-mono text-slate-600">${item.live}</td>
+                            <td class="p-5">
+                                <span class="font-bold text-blue-600">${targetPrice}</span><br>
+                                <span class="text-[10px] text-slate-400">Range: ${(targetPrice*0.9).toFixed(0)} - ${(targetPrice*1.1).toFixed(0)}</span>
+                            </td>
+                            <td class="p-5">
+                                <span class="px-2 py-1 rounded-md text-[10px] font-bold ${upside > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}">
+                                    ${upside}% 空間
+                                </span>
+                            </td>
+                            <td class="p-5 text-right"><button onclick="remove(${i})" class="text-slate-200 hover:text-rose-400"><i class="fa-solid fa-trash-can"></i></button></td>
+                        </tr>`;
+                });
+            }
         }
 
         function switchTab(tab) {
             currentTab = tab;
             document.getElementById('tab-hold').className = tab === 'hold' ? 'pb-3 tab-active' : 'pb-3';
             document.getElementById('tab-watch').className = tab === 'watch' ? 'pb-3 tab-active' : 'pb-3';
+            
+            document.querySelectorAll('.hold-field').forEach(el => el.classList.toggle('hidden', tab !== 'hold'));
+            document.querySelectorAll('.watch-field').forEach(el => el.classList.toggle('hidden', tab !== 'watch'));
+            
             render();
         }
 
         function remove(i) {
-            if (currentTab === 'hold') holdings.splice(i, 1);
-            else watchlist.splice(i, 1);
+            if (currentTab === 'hold') holdings.splice(i, 1); else watchlist.splice(i, 1);
             save(); render();
         }
 
@@ -170,4 +174,3 @@
     </script>
 </body>
 </html>
-
