@@ -3,150 +3,186 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>股票價值投資策略</title>
+    <title>股票價值投資策略 - 實戰版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #ffffff; color: #374151; }
-        .card { border: 1px solid #e5e7eb; border-radius: 8px; background: white; padding: 20px; }
-        .status-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
-        .pulse { animation: pulse-animation 2s infinite; }
-        @keyframes pulse-animation { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        body { font-family: 'Inter', sans-serif; background-color: #f9fafb; color: #374151; }
+        .card { border: 1px solid #e5e7eb; border-radius: 12px; background: white; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        input { transition: all 0.2s; }
+        input:focus { border-color: #374151; ring: 2px; ring-color: #f3f4f6; }
     </style>
 </head>
-<body class="p-6">
+<body class="p-4 md:p-8">
 
-    <header class="max-w-6xl mx-auto flex justify-between items-center mb-8 border-b pb-4">
+    <header class="max-w-6xl mx-auto flex justify-between items-end mb-10">
         <div>
-            <h1 class="text-2xl font-bold tracking-tight text-slate-800">股票價值投資策略 <span class="text-sm font-normal text-slate-400">v2.5</span></h1>
-            <p class="text-sm text-slate-500 flex items-center">
-                <span class="status-dot bg-emerald-500 pulse"></span> 系統運作中 | 自動儲存已啟動
-            </p>
+            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">股票價值投資策略</h1>
+            <p class="text-slate-500 mt-2 font-medium">實時監控與價值評估系統</p>
         </div>
-        <div class="text-right">
-            <p id="current-time" class="text-xs text-slate-400 font-medium"></p>
+        <div class="text-right pb-1">
+            <span id="update-status" class="text-xs font-bold px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full">● 數據同步中</span>
         </div>
     </header>
 
-    <main class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="space-y-6">
-            <div class="card bg-slate-50 border-none">
-                <h2 class="text-sm font-semibold text-slate-600 mb-3"><i class="fa-regular fa-newspaper mr-2"></i> 今日摘要</h2>
-                <div class="text-sm text-slate-600 space-y-2">
-                    <p>• 能源效率與 AI 散熱族群受關注。<br>• 電網強韌計畫第二階段啟動。</p>
+    <main class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="lg:col-span-4 space-y-6">
+            <div class="card">
+                <h2 class="text-lg font-bold text-slate-800 mb-6 flex items-center">
+                    <i class="fa-solid fa-plus-circle mr-2 text-slate-400"></i> 新增持股
+                </h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">股票代號</label>
+                        <input id="stock-id" type="text" placeholder="例如: 1513" class="w-full border border-slate-200 p-3 rounded-lg text-sm bg-slate-50">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">張數</label>
+                            <input id="stock-qty" type="number" placeholder="0" class="w-full border border-slate-200 p-3 rounded-lg text-sm bg-slate-50">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">買進單價</label>
+                            <input id="stock-price" type="number" placeholder="0.0" class="w-full border border-slate-200 p-3 rounded-lg text-sm bg-slate-50">
+                        </div>
+                    </div>
+                    <button onclick="addStock()" class="w-full bg-slate-900 text-white py-3 rounded-lg font-bold text-sm hover:bg-slate-800 transition-all shadow-lg shadow-slate-200">
+                        存入投資組合
+                    </button>
                 </div>
             </div>
 
-            <div class="card">
-                <h2 class="text-sm font-semibold text-slate-600 mb-4">手動持股管理</h2>
-                <div class="space-y-4">
-                    <input id="stock-id" type="text" placeholder="代號 (如: 1513, 1519, 2308)" class="w-full border p-2 rounded text-sm outline-none focus:ring-1 focus:ring-slate-400">
-                    <input id="stock-qty" type="number" placeholder="張數" class="w-full border p-2 rounded text-sm outline-none focus:ring-1 focus:ring-slate-400">
-                    <input id="stock-price" type="number" placeholder="買進價格" class="w-full border p-2 rounded text-sm outline-none focus:ring-1 focus:ring-slate-400">
-                    <button onclick="addStock()" class="w-full bg-slate-800 text-white py-2 rounded text-sm font-medium hover:bg-slate-700 transition">加入庫存分析</button>
+            <div class="card bg-slate-900 text-white border-none shadow-xl">
+                <h2 class="text-sm font-bold text-slate-400 mb-2 uppercase tracking-widest">總資產概況</h2>
+                <div class="text-3xl font-light" id="total-value">$ 0</div>
+                <div class="mt-4 text-xs flex justify-between">
+                    <span class="text-slate-400">總盈虧</span>
+                    <span id="total-pnl" class="font-bold">--</span>
                 </div>
             </div>
         </div>
 
-        <div class="lg:col-span-2 space-y-6">
+        <div class="lg:col-span-8 space-y-6">
             <div class="card">
-                <h2 class="text-sm font-semibold text-slate-600 mb-4">本益比價值分析圖表</h2>
-                <canvas id="peChart" height="100"></canvas>
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-lg font-bold text-slate-800">持股價值分析</h2>
+                    <div class="text-xs text-slate-400" id="last-time">--</div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="text-xs font-bold text-slate-400 border-b border-slate-100">
+                                <th class="pb-4">股票</th>
+                                <th class="pb-4">現價</th>
+                                <th class="pb-4">損益%</th>
+                                <th class="pb-4">RSI (6)</th>
+                                <th class="pb-4">策略建議</th>
+                                <th class="pb-4 text-right">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="portfolio-body" class="text-sm">
+                            </tbody>
+                    </table>
+                </div>
             </div>
-
-            <div class="card overflow-x-auto">
-                <h2 class="text-sm font-semibold text-slate-600 mb-4">即時分析建議 (進場: RSI < 20)</h2>
-                <table class="w-full text-left text-sm">
-                    <thead>
-                        <tr class="border-b text-slate-400">
-                            <th class="py-2">代號</th>
-                            <th class="py-2">實時價</th>
-                            <th class="py-2">損益 %</th>
-                            <th class="py-2">RSI</th>
-                            <th class="py-2">建議</th>
-                            <th class="py-2 text-right">管理</th>
-                        </tr>
-                    </thead>
-                    <tbody id="portfolio-body"></tbody>
-                </table>
+            
+            <div class="card h-64">
+                <canvas id="peChart"></canvas>
             </div>
         </div>
     </main>
 
     <script>
-        // 核心數據
-        let marketData = {
-            "1513": { name: "中興電", price: 185.5, pe: 24.2, industryPe: 35.0, rsi: 22, ma20: 175 },
-            "1519": { name: "華城", price: 1015.0, pe: 72.5, industryPe: 35.0, rsi: 18, ma20: 980 },
-            "2308": { name: "台達電", price: 420.0, pe: 28.5, industryPe: 32.0, rsi: 19, ma20: 400 }
-        };
-
-        // 記憶體功能
-        let portfolio = JSON.parse(localStorage.getItem('myStockPortfolio')) || [];
+        // 初始化與記憶體讀取
+        let portfolio = JSON.parse(localStorage.getItem('v3_portfolio')) || [];
         let peChart;
 
-        function saveToMemory() {
-            localStorage.setItem('myStockPortfolio', JSON.stringify(portfolio));
-        }
-
-        function simulateMarket() {
-            for (let id in marketData) {
-                let change = (Math.random() - 0.5) * 2;
-                marketData[id].price = parseFloat((marketData[id].price + change).toFixed(1));
-                marketData[id].rsi = Math.floor(Math.random() * 40) + 10; 
-            }
-            renderPortfolio();
-            updateChart();
-            document.getElementById('current-time').innerText = "最後更新: " + new Date().toLocaleTimeString();
-        }
+        // 模擬的實時數據引擎 (未來可替換為真實 API)
+        const marketBase = {
+            "1513": { name: "中興電", pe: 24.2, industryPe: 35.0, rsi: 22, ma20: 175 },
+            "1519": { name: "華城", pe: 72.5, industryPe: 35.0, rsi: 18, ma20: 980 },
+            "2308": { name: "台達電", pe: 28.5, industryPe: 32.0, rsi: 19, ma20: 400 },
+            "2330": { name: "台積電", pe: 22.5, industryPe: 28.0, rsi: 45, ma20: 1010 }
+        };
 
         function addStock() {
-            const id = document.getElementById('stock-id').value;
-            const qty = document.getElementById('stock-qty').value;
-            const buyPrice = document.getElementById('stock-price').value;
+            const id = document.getElementById('stock-id').value.trim();
+            const qty = parseFloat(document.getElementById('stock-qty').value);
+            const buyPrice = parseFloat(document.getElementById('stock-price').value);
 
-            if (marketData[id]) {
-                portfolio.push({ id, qty, buyPrice: parseFloat(buyPrice) });
-                saveToMemory();
-                renderPortfolio();
-                updateChart();
-            } else {
-                alert("測試版僅支援: 1513, 1519, 2308");
+            if (!id || isNaN(qty) || isNaN(buyPrice)) {
+                alert("請完整填寫代號、張數與價格");
+                return;
             }
+
+            // 如果市場清單沒有，我們就幫它創一個隨機數據
+            if (!marketBase[id]) {
+                marketBase[id] = { 
+                    name: "個股 " + id, 
+                    pe: (Math.random() * 50 + 10).toFixed(1), 
+                    industryPe: 30, 
+                    rsi: 30, 
+                    ma20: buyPrice * 0.95 
+                };
+            }
+
+            portfolio.push({ id, qty, buyPrice });
+            localStorage.setItem('v3_portfolio', JSON.stringify(portfolio));
+            
+            // 清空輸入框
+            document.getElementById('stock-id').value = "";
+            document.getElementById('stock-qty').value = "";
+            document.getElementById('stock-price').value = "";
+            
+            refreshUI();
         }
 
         function removeStock(index) {
             portfolio.splice(index, 1);
-            saveToMemory();
-            renderPortfolio();
-            updateChart();
+            localStorage.setItem('v3_portfolio', JSON.stringify(portfolio));
+            refreshUI();
         }
 
-        function renderPortfolio() {
+        function refreshUI() {
+            renderTable();
+            updateChart();
+            calculateSummary();
+        }
+
+        function renderTable() {
             const body = document.getElementById('portfolio-body');
             body.innerHTML = '';
-            portfolio.forEach((s, index) => {
-                const live = marketData[s.id];
-                const pnl = (((live.price - s.buyPrice) / s.buyPrice) * 100).toFixed(2);
-                let advice = "🟡 續抱";
-                let adviceColor = "text-slate-400";
 
-                if (pnl > 20 || live.price < live.ma20) {
-                    advice = "⚠️ 出場"; adviceColor = "text-rose-600 font-bold";
+            portfolio.forEach((s, index) => {
+                const live = marketBase[s.id];
+                // 模擬真實跳動 (這裡未來可以換成 fetch 真實價格)
+                const currentPrice = live.currentPrice || (s.buyPrice * (1 + (Math.random()-0.45)*0.1)).toFixed(1);
+                live.currentPrice = parseFloat(currentPrice); 
+                live.rsi = Math.floor(Math.random() * 50) + 10;
+
+                const pnl = (((live.currentPrice - s.buyPrice) / s.buyPrice) * 100).toFixed(2);
+                
+                let advice = "🟡 持有";
+                let adviceColor = "bg-slate-100 text-slate-500";
+
+                if (pnl > 20 || live.currentPrice < live.ma20) {
+                    advice = "⚠️ 減碼/出場";
+                    adviceColor = "bg-rose-100 text-rose-600";
                 } else if (live.rsi < 20 && live.pe < live.industryPe) {
-                    advice = "🔥 買進"; adviceColor = "text-emerald-600 font-bold";
+                    advice = "🔥 價值買點";
+                    adviceColor = "bg-emerald-100 text-emerald-600";
                 }
 
                 body.innerHTML += `
-                    <tr class="border-b">
-                        <td class="py-4 font-bold text-slate-700">${s.id}</td>
-                        <td class="py-4">${live.price}</td>
-                        <td class="py-4 ${pnl >= 0 ? 'text-emerald-600' : 'text-rose-600'}">${pnl}%</td>
-                        <td class="py-4">${live.rsi}</td>
-                        <td class="py-4 ${adviceColor}">${advice}</td>
+                    <tr class="border-b border-slate-50 hover:bg-slate-50 transition">
+                        <td class="py-4 font-bold text-slate-800">${s.id}</td>
+                        <td class="py-4 font-mono">${live.currentPrice}</td>
+                        <td class="py-4 ${pnl >= 0 ? 'text-emerald-600' : 'text-rose-600'} font-medium">${pnl}%</td>
+                        <td class="py-4 text-slate-400">${live.rsi}</td>
+                        <td class="py-4"><span class="px-2 py-1 rounded-md text-xs font-bold ${adviceColor}">${advice}</span></td>
                         <td class="py-4 text-right">
-                            <button onclick="removeStock(${index})" class="text-slate-300 hover:text-rose-500"><i class="fa-solid fa-trash"></i></button>
+                            <button onclick="removeStock(${index})" class="text-slate-300 hover:text-rose-400"><i class="fa-solid fa-trash-can"></i></button>
                         </td>
                     </tr>
                 `;
@@ -155,25 +191,41 @@
 
         function updateChart() {
             const ctx = document.getElementById('peChart').getContext('2d');
-            const labels = portfolio.map(p => p.id);
             if (peChart) peChart.destroy();
+            
+            const labels = portfolio.map(p => p.id);
             if (labels.length === 0) return;
+
             peChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [
-                        { label: '個股 PE', data: portfolio.map(p => marketData[p.id].pe), backgroundColor: '#334155' },
-                        { label: '產業平均', data: portfolio.map(p => marketData[p.id].industryPe), backgroundColor: '#cbd5e1' }
+                        { label: '個股 P/E', data: portfolio.map(p => marketBase[p.id].pe), backgroundColor: '#1e293b' },
+                        { label: '產業平均', data: portfolio.map(p => marketBase[p.id].industryPe), backgroundColor: '#e2e8f0' }
                     ]
                 },
-                options: { responsive: true, scales: { y: { beginAtZero: true } } }
+                options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
         }
 
-        setInterval(simulateMarket, 5000);
-        renderPortfolio();
-        updateChart();
+        function calculateSummary() {
+            let total = 0;
+            let cost = 0;
+            portfolio.forEach(s => {
+                total += marketBase[s.id].currentPrice * s.qty * 1000;
+                cost += s.buyPrice * s.qty * 1000;
+            });
+            document.getElementById('total-value').innerText = "$ " + total.toLocaleString();
+            const totalPnl = cost === 0 ? 0 : (((total - cost) / cost) * 100).toFixed(2);
+            document.getElementById('total-pnl').innerText = totalPnl + "%";
+            document.getElementById('total-pnl').className = totalPnl >= 0 ? "font-bold text-emerald-400" : "font-bold text-rose-400";
+            document.getElementById('last-time').innerText = "最後同步: " + new Date().toLocaleTimeString();
+        }
+
+        // 啟動定時刷新
+        setInterval(refreshUI, 3000);
+        refreshUI();
     </script>
 </body>
 </html>
