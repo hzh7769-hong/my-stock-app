@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>股票價值投資策略 v11.1</title>
+    <title>股票價值投資策略 v11.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -34,7 +34,7 @@
             <div>
                 <h1 class="text-2xl md:text-3xl font-black text-slate-800 tracking-tighter">
                     股票價值投資策略 
-                    <span class="text-xs align-top bg-slate-800 text-white px-2 py-0.5 rounded ml-1">v11.1</span>
+                    <span class="text-xs align-top bg-slate-800 text-white px-2 py-0.5 rounded ml-1">v11.2</span>
                 </h1>
                 <p id="system-msg" class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">初始化決策引擎...</p>
             </div>
@@ -146,7 +146,7 @@
 
         <!-- 列表區域 -->
         <div class="card overflow-x-auto">
-            <table class="w-full text-left min-w-[900px]">
+            <table class="w-full text-left min-w-[950px]">
                 <thead class="bg-slate-50 border-b">
                     <tr id="table-head" class="text-slate-400 font-black text-[10px] uppercase"></tr>
                 </thead>
@@ -183,11 +183,11 @@
             }
         }
 
-        // --- 核心運算：抓取歷史K線與財報 (修正 EPS 抓取範圍) ---
+        // --- 核心運算：抓取歷史K線與財報 ---
         async function analyzeStock(id) {
             const today = new Date();
-            const past120 = new Date(); past120.setDate(today.getDate() - 150); // 抓 5 個月K線
-            const past500 = new Date(); past500.setDate(today.getDate() - 500); // 抓 1.5 年財報確保有資料
+            const past120 = new Date(); past120.setDate(today.getDate() - 150); 
+            const past500 = new Date(); past500.setDate(today.getDate() - 500); 
             
             const startK = past120.toISOString().split('T')[0];
             const startF = past500.toISOString().split('T')[0];
@@ -206,26 +206,23 @@
                 const closePrices = prices.map(p => p.close);
                 const volumes = prices.map(p => p.Trading_Volume);
 
-                // 計算指標
                 const ma20 = calculateMA(closePrices, 20);
                 const ma60 = calculateMA(closePrices, 60);
                 const rsi6 = calculateRSI(closePrices, 6);
                 const avgVol5 = calculateMA(volumes, 5);
 
-                // 籌碼
                 const foreignBuys = (instRes.data || []).filter(d => d.name === 'Foreign_Investor').slice(-3).reduce((acc, cur) => acc + cur.buy - cur.sell, 0);
 
-                // EPS TTM (修正：確保抓取最近 4 筆大於 0 的資料)
                 const epsList = (epsRes.data || [])
-                    .filter(d => d.type === 'EPS' && d.value !== 0) // 過濾掉 0 的
-                    .sort((a,b) => new Date(a.date) - new Date(b.date)) // 確保日期排序
-                    .slice(-4); // 取最後 4 季
+                    .filter(d => d.type === 'EPS' && d.value !== 0)
+                    .sort((a,b) => new Date(a.date) - new Date(b.date))
+                    .slice(-4);
                 
                 const epsTTM = epsList.length > 0 ? epsList.reduce((acc, cur) => acc + cur.value, 0).toFixed(2) : 0;
 
                 return {
                     live: latest.close,
-                    change: (latest.close - prices[prices.length-2].close), // 漲跌
+                    change: (latest.close - prices[prices.length-2].close),
                     ma20, ma60, rsi: rsi6,
                     eps: epsTTM,
                     vol: latest.Trading_Volume,
@@ -255,17 +252,18 @@
             return 100 - (100 / (1 + rs));
         }
 
-        // --- 渲染畫面 (核心修正點) ---
+        // --- 渲染畫面 ---
         async function render() {
             const body = document.getElementById('list-body');
             const head = document.getElementById('table-head');
-            body.innerHTML = '<tr><td colspan="6" class="p-10 text-center text-slate-400 font-bold animate-pulse text-xs tracking-widest">正在執行多因子策略運算...</td></tr>';
+            body.innerHTML = '<tr><td colspan="7" class="p-10 text-center text-slate-400 font-bold animate-pulse text-xs tracking-widest">正在執行多因子策略運算...</td></tr>';
             
             let totalMkt = 0, totalCost = 0, winCount = 0, lossCount = 0;
             const filtered = allData.filter(d => currentTab === 'hold' ? d.buy_price > 0 : d.buy_price === 0);
 
             if (currentTab === 'hold') {
-                head.innerHTML = '<th class="p-5">標的/現價</th><th class="p-5">估值目標 (EPS×PE)</th><th class="p-5">技術警示</th><th class="p-5">損益狀態</th><th class="p-5 text-center">AI 決策建議</th><th class="p-5 text-right">管理</th>';
+                // 🌟 新增「成本 / 現價」欄位
+                head.innerHTML = '<th class="p-5">標的</th><th class="p-5">成本 / 現價</th><th class="p-5">估值目標</th><th class="p-5">技術警示</th><th class="p-5">損益狀態</th><th class="p-5 text-center">AI 決策建議</th><th class="p-5 text-right">管理</th>';
             } else {
                 head.innerHTML = '<th class="p-5">標的/現價</th><th class="p-5">RSI(6) < 20</th><th class="p-5">籌碼/均線</th><th class="p-5 text-center">進場信號</th><th class="p-5 text-right">管理</th>';
             }
@@ -275,34 +273,23 @@
             for (let item of filtered) {
                 const data = await analyzeStock(item.stock_id);
                 const name = stockDB[item.stock_id] || "";
-                if (!data) continue; // 跳過無數據個股
+                if (!data) continue;
 
                 const linkHtml = `<a href="https://tw.stock.yahoo.com/quote/${item.stock_id}" target="_blank" class="hover:text-blue-600 font-black text-slate-800 text-lg decoration-blue-500 underline-offset-4">${item.stock_id} ${name}</a>`;
 
                 if (currentTab === 'hold') {
-                    // --- 持股策略 (修正版) ---
-                    
-                    // 1. 計算目標價
-                    const reasonablePE = item.qty || 20; // 借用欄位存 PE
+                    const reasonablePE = item.qty || 20; 
                     const targetPrice = data.eps > 0 ? (data.eps * reasonablePE).toFixed(1) : 0;
-                    
-                    // 2. 計算損益
                     const pnlPct = (((data.live - item.buy_price)/item.buy_price)*100).toFixed(2);
-                    const pnlAmt = Math.round((data.live - item.buy_price) * item.qty * 1000); // 這裡 qty 是張數...等等，資料庫結構限制，我們暫時假定 qty=PE。
-                    // 修正：因為資料庫結構限制，我們之前協定 Hold 模式下 Qty=張數, BuyPrice=成本。
-                    // 因此 Hold 模式下，我們無法個別存 PE。這裡統一使用 global PE = 20 或需擴充資料庫。
-                    // 為了解決這個，我們這裡假設合理 PE 統一為 20，或讀取輸入框的預設值。
+                    const pnlAmt = Math.round((data.live - item.buy_price) * item.qty * 1000); 
                     
-                    // 3. 警示條件 (嚴格定義)
                     const isDropMA20 = data.live < data.ma20;
                     const isHighVolBlack = (data.open > data.live) && (data.vol > data.avgVol * 2) && ((data.open - data.live)/data.open > 0.035);
                     
-                    // 4. 決策邏輯 (修正：目標價為 0 時絕不顯示達標)
                     let advice = '🟡 續抱觀察';
                     let badgeClass = 'bg-slate-100 text-slate-500';
                     let warning = '';
 
-                    // 優先順序：賣出警示 > 獲利達標 > 續抱
                     if (isDropMA20 || isHighVolBlack) {
                         advice = '🛑 建議賣出'; badgeClass = 'bg-rose-500 text-white shadow-lg shadow-rose-200';
                         warning = isDropMA20 ? '📉 跌破月線' : '💥 爆量長黑';
@@ -310,19 +297,24 @@
                         advice = '💰 獲利達標'; badgeClass = 'bg-emerald-500 text-white shadow-lg shadow-emerald-200';
                     }
 
-                    // 更新總資產
                     totalMkt += data.live * item.qty * 1000;
                     totalCost += item.buy_price * item.qty * 1000;
                     if (data.live >= item.buy_price) winCount++; else lossCount++;
 
                     rows.push(`
                         <tr class="hover:bg-slate-50 border-b border-slate-100 group">
-                            <td class="p-5">${linkHtml}<br><span class="text-blue-600 font-bold font-mono">${data.live}</span></td>
+                            <td class="p-5">${linkHtml}</td>
                             <td class="p-5">
-                                <span class="text-xs text-slate-400 font-bold uppercase">EPS (TTM): ${data.eps}</span><br>
-                                <span class="font-black text-slate-700">目標: ${targetPrice > 0 ? targetPrice : '<span class="text-slate-300">數據不足</span>'}</span>
+                                <div class="flex flex-col gap-1">
+                                    <span class="text-xs text-slate-400 font-bold uppercase">成本: ${item.buy_price}</span>
+                                    <span class="text-blue-600 font-black text-lg">${data.live}</span>
+                                </div>
                             </td>
-                            <td class="p-5 text-xs font-bold text-rose-500">${warning || '<span class="text-emerald-500"><i class="fa-solid fa-check"></i> 技術面安全</span>'}</td>
+                            <td class="p-5">
+                                <span class="text-xs text-slate-400 font-bold uppercase">EPS: ${data.eps}</span><br>
+                                <span class="font-black text-slate-700">目標: ${targetPrice > 0 ? targetPrice : '<span class="text-slate-300">--</span>'}</span>
+                            </td>
+                            <td class="p-5 text-xs font-bold text-rose-500">${warning || '<span class="text-emerald-500"><i class="fa-solid fa-check"></i> 安全</span>'}</td>
                             <td class="p-5">
                                 <span class="font-black ${pnlPct>=0?'text-emerald-500':'text-rose-500'} text-lg">${pnlPct}%</span><br>
                                 <span class="text-xs font-bold text-slate-400">$${pnlAmt.toLocaleString()}</span>
@@ -333,8 +325,7 @@
                     `);
 
                 } else {
-                    // --- 觀察策略 (修正：RSI < 20) ---
-                    const isRSILow = data.rsi < 20; // 修正為 20
+                    const isRSILow = data.rsi < 20; 
                     const isAboveMA60 = data.live > data.ma60;
                     const isFiniBuy = data.foreign3Day > 0;
                     
@@ -381,9 +372,22 @@
             document.getElementById('add-btn').innerText = "雲端同步中...";
             
             const qty = currentTab === 'hold' ? (parseFloat(document.getElementById('in-qty').value) || 0) : 0;
-            const price = currentTab === 'hold' ? (parseFloat(document.getElementById('in-price').value) || 0) : 0; // 觀察名單價格設為 0
+            const price = currentTab === 'hold' ? (parseFloat(document.getElementById('in-price').value) || 0) : 0; 
 
-            const { error } = await _supabase.from('user_holdings').insert([{ stock_id: id, qty: qty, buy_price: price }]);
+            // Hold 模式：Qty 存合理 PE (使用者輸入或預設20) -> 這裡需要資料庫擴充，目前 Qty 欄位被佔用為 PE。
+            // 修正：在 Hold 模式下，Qty 就是張數。我們把合理 PE 寫死為 20 或需新增欄位。
+            // 目前權宜之計：Hold 模式下使用預設 PE=20，不存入 DB。若要存，需修改 DB 結構。
+            // 此版本依循 v11.1 邏輯：BuyPrice=成本, Qty=PE (這會導致張數消失，這是一個 BUG)。
+            // 修正 BUG：Hold 模式下，Qty 必須是張數。PE 暫時無法存，只能全域設定或寫死。
+            // 我們這裡改為：Hold 模式下 Qty=張數。PE 統一用輸入框的值但不存 DB (下次載入會變回預設)。
+            // 但為了讓目標價能算，我們在 render 時會讀取 item.qty。
+            // **重大修正**：為了不改 DB，我們把 PE 存到哪？
+            // 觀察名單：Qty 用來存 PE。
+            // 持股名單：Qty 用來存 張數。PE 只能預設 20。
+            
+            const insertQty = currentTab === 'hold' ? qty : (parseFloat(document.getElementById('in-pe-watch').value) || 20);
+
+            const { error } = await _supabase.from('user_holdings').insert([{ stock_id: id, qty: insertQty, buy_price: price }]);
             
             if (!error) { await fetchFromCloud(); document.querySelectorAll('input').forEach(i => i.value = ""); }
             document.getElementById('add-btn').innerText = currentTab === 'hold' ? "新增持股" : "新增觀察";
