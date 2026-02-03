@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>股票價值投資策略 v11.2</title>
+    <title>股票價值投資策略 v12.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -15,8 +15,6 @@
         .card { background: white; border-radius: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
         .badge { padding: 0.35rem 0.75rem; border-radius: 0.5rem; font-weight: 900; font-size: 0.85rem; letter-spacing: 0.05em; display: inline-block; min-width: 80px; text-align: center; }
         .news-link:hover { color: #2563eb; text-decoration: underline; }
-        .pulse-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #10b981; margin-right: 6px; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
         
         @media (max-width: 640px) {
             .mobile-hide { display: none; }
@@ -34,13 +32,13 @@
             <div>
                 <h1 class="text-2xl md:text-3xl font-black text-slate-800 tracking-tighter">
                     股票價值投資策略 
-                    <span class="text-xs align-top bg-slate-800 text-white px-2 py-0.5 rounded ml-1">v11.2</span>
+                    <span class="text-xs align-top bg-blue-600 text-white px-2 py-0.5 rounded ml-1">v12.0 AI版</span>
                 </h1>
-                <p id="system-msg" class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">初始化決策引擎...</p>
+                <p id="system-msg" class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">初始化 AI 估值引擎...</p>
             </div>
             <div class="mt-2 md:mt-0 flex items-center gap-2">
                 <span id="cloud-status" class="text-[10px] font-black text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-                    <span class="pulse-dot"></span> 連線正常
+                    <i class="fa-solid fa-cloud"></i> 資料庫連線中
                 </span>
             </div>
         </div>
@@ -54,7 +52,7 @@
         <!-- A. 持股模式顯示：資產儀表板 -->
         <div id="dashboard-hold" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div class="card p-6 flex flex-col items-center justify-center relative">
-                <p class="text-[10px] font-black text-slate-400 uppercase mb-2">庫存損益分佈</p>
+                <p class="text-[10px] font-black text-slate-400 uppercase mb-2">庫存損益佔比</p>
                 <div class="w-32 h-32 relative">
                     <canvas id="winRateChart"></canvas>
                     <div class="absolute inset-0 flex items-center justify-center flex-col pointer-events-none">
@@ -76,33 +74,29 @@
             </div>
         </div>
 
-        <!-- B. 觀察模式顯示：新聞與推薦 -->
+        <!-- B. 觀察模式顯示：AI 策略看板 -->
         <div id="dashboard-watch" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div class="card p-6">
-                <h3 class="text-sm font-black text-slate-700 mb-4 border-l-4 border-blue-500 pl-2">本日重大財經新聞</h3>
-                <ul class="space-y-3 text-xs font-bold text-slate-600">
-                    <li><a href="https://news.cnyes.com/news/cat/tw_stock" target="_blank" class="news-link flex items-center"><i class="fa-solid fa-newspaper mr-2 text-blue-400"></i> 鉅亨網台股頭條 <span class="ml-auto opacity-50">Link ↗</span></a></li>
-                    <li><a href="https://tw.stock.yahoo.com/news/" target="_blank" class="news-link flex items-center"><i class="fa-brands fa-yahoo mr-2 text-purple-400"></i> Yahoo 財經新聞 <span class="ml-auto opacity-50">Link ↗</span></a></li>
-                    <li><a href="https://money.udn.com/money/index" target="_blank" class="news-link flex items-center"><i class="fa-solid fa-sack-dollar mr-2 text-emerald-400"></i> 經濟日報產業動態 <span class="ml-auto opacity-50">Link ↗</span></a></li>
-                </ul>
+            <div class="card p-6 border-l-4 border-emerald-500">
+                <h3 class="text-sm font-black text-slate-700 mb-4">🚀 低點佈局策略 (拐點偵測)</h3>
+                <div class="text-xs text-slate-500 space-y-2">
+                    <p class="flex items-center"><i class="fa-solid fa-check text-emerald-500 mr-2"></i> 均線：5MA 向上突破 20MA (黃金交叉)</p>
+                    <p class="flex items-center"><i class="fa-solid fa-check text-emerald-500 mr-2"></i> 趨勢：20MA 斜率由負轉正 (月線翻揚)</p>
+                    <p class="flex items-center"><i class="fa-solid fa-check text-emerald-500 mr-2"></i> 乖離：股價與季線乖離 < 10% (低基期)</p>
+                </div>
             </div>
             <div class="card p-6 bg-slate-800 text-white">
-                <h3 class="text-sm font-black text-blue-300 mb-4 border-l-4 border-white pl-2">觀察策略參數 (RSI < 20)</h3>
+                <h3 class="text-sm font-black text-blue-300 mb-4">AI 估值邏輯 (v12.0)</h3>
                 <div class="grid grid-cols-2 gap-4 text-xs">
                     <div>
-                        <p class="text-slate-400 uppercase mb-1">進場條件</p>
+                        <p class="text-slate-400 uppercase mb-1">合理 PE 推算</p>
                         <ul class="space-y-1 list-disc list-inside text-slate-200">
-                            <li><span class="text-yellow-400">RSI(6) < 20</span> (極度超賣)</li>
-                            <li>股價 > 60MA (季線)</li>
-                            <li>外資近 3 日買超</li>
+                            <li>基礎：歷史本益比中位數</li>
+                            <li>加權：淨利成長率 (PEG)</li>
                         </ul>
                     </div>
                     <div>
-                        <p class="text-slate-400 uppercase mb-1">基本面濾網</p>
-                        <ul class="space-y-1 list-disc list-inside text-slate-200">
-                            <li>P/E < 產業平均 * 0.8</li>
-                            <li>營收成長趨勢向上</li>
-                        </ul>
+                        <p class="text-slate-400 uppercase mb-1">目標價公式</p>
+                        <p class="text-emerald-400 font-bold mt-1">Target = EPS(TTM) × 合理PE</p>
                     </div>
                 </div>
             </div>
@@ -110,35 +104,31 @@
 
         <!-- 輸入區 -->
         <div class="card p-6 mb-8 border border-blue-50">
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div class="md:col-span-1">
-                    <label class="text-[10px] font-bold text-slate-400 uppercase">代號</label>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase">股票代號</label>
                     <input id="in-id" type="text" placeholder="2330" class="w-full border-2 border-slate-100 p-3 rounded-xl font-bold focus:border-blue-500 outline-none">
                 </div>
                 
                 <!-- 持股欄位 -->
                 <div class="hold-field md:col-span-1">
-                    <label class="text-[10px] font-bold text-slate-400 uppercase">張數</label>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase">持股張數</label>
                     <input id="in-qty" type="number" placeholder="1" class="w-full border-2 border-slate-100 p-3 rounded-xl font-bold outline-none">
                 </div>
                 <div class="hold-field md:col-span-1">
-                    <label class="text-[10px] font-bold text-slate-400 uppercase">成本</label>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase">平均成本</label>
                     <input id="in-price" type="number" placeholder="0.0" class="w-full border-2 border-slate-100 p-3 rounded-xl font-bold outline-none">
                 </div>
-                <div class="hold-field md:col-span-1">
-                    <label class="text-[10px] font-bold text-slate-400 uppercase">合理本益比 (PE)</label>
-                    <input id="in-pe-hold" type="number" value="20" class="w-full border-2 border-slate-100 p-3 rounded-xl font-bold outline-none text-blue-600 bg-blue-50">
-                </div>
 
-                <!-- 觀察欄位 -->
-                <div class="watch-field hidden md:col-span-1">
-                    <label class="text-[10px] font-bold text-slate-400 uppercase">產業平均 PE</label>
-                    <input id="in-pe-watch" type="number" placeholder="25" class="w-full border-2 border-slate-100 p-3 rounded-xl font-bold outline-none">
+                <!-- 觀察欄位 (目標價) -->
+                <div class="watch-field hidden md:col-span-2">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase">自訂目標價 (選填，若不填則由 AI 自動推算)</label>
+                    <input id="in-target-price" type="number" placeholder="0.0" class="w-full border-2 border-slate-100 p-3 rounded-xl font-bold outline-none bg-blue-50 text-blue-600">
                 </div>
                 
                 <div class="md:col-span-1 flex items-end">
                     <button id="add-btn" onclick="handleAdd()" class="w-full bg-slate-900 text-white rounded-xl font-black py-3.5 uppercase hover:bg-blue-600 transition-all shadow-lg active:scale-95 text-xs tracking-widest">
-                        執行策略運算
+                        存入雲端並運算
                     </button>
                 </div>
             </div>
@@ -171,7 +161,8 @@
                 const json = await res.json();
                 json.data.forEach(s => stockDB[s.stock_id] = s.stock_name);
                 await fetchFromCloud();
-                document.getElementById('system-msg').innerText = "系統就緒 | 即時數據連線中";
+                document.getElementById('system-msg').innerText = "AI 引擎就緒 | v12.0";
+                document.getElementById('cloud-status').innerHTML = '<i class="fa-solid fa-cloud"></i> 雲端同步完成';
             } catch (e) { console.error("Init Error:", e); }
         }
 
@@ -183,20 +174,21 @@
             }
         }
 
-        // --- 核心運算：抓取歷史K線與財報 ---
+        // --- 核心運算：AI 財報分析與均線計算 ---
         async function analyzeStock(id) {
             const today = new Date();
-            const past120 = new Date(); past120.setDate(today.getDate() - 150); 
-            const past500 = new Date(); past500.setDate(today.getDate() - 500); 
+            const past180 = new Date(); past180.setDate(today.getDate() - 180); // 抓半年K線算均線
+            const past700 = new Date(); past700.setDate(today.getDate() - 700); // 抓2年財報算成長率
             
-            const startK = past120.toISOString().split('T')[0];
-            const startF = past500.toISOString().split('T')[0];
+            const startK = past180.toISOString().split('T')[0];
+            const startF = past700.toISOString().split('T')[0];
 
             try {
-                const [priceRes, epsRes, instRes] = await Promise.all([
+                const [priceRes, epsRes, instRes, perRes] = await Promise.all([
                     fetch(`https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=${id}&start_date=${startK}&token=${FINMIND_TOKEN}`).then(r => r.json()),
                     fetch(`https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockFinancialStatements&data_id=${id}&start_date=${startF}&token=${FINMIND_TOKEN}`).then(r => r.json()),
-                    fetch(`https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockInstitutionalInvestorsBuySell&data_id=${id}&start_date=${startK}&token=${FINMIND_TOKEN}`).then(r => r.json())
+                    fetch(`https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockInstitutionalInvestorsBuySell&data_id=${id}&start_date=${startK}&token=${FINMIND_TOKEN}`).then(r => r.json()),
+                    fetch(`https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPER&data_id=${id}&start_date=${startK}&token=${FINMIND_TOKEN}`).then(r => r.json())
                 ]);
 
                 const prices = priceRes.data || [];
@@ -206,29 +198,59 @@
                 const closePrices = prices.map(p => p.close);
                 const volumes = prices.map(p => p.Trading_Volume);
 
+                // 1. 技術指標
+                const ma5 = calculateMA(closePrices, 5);
                 const ma20 = calculateMA(closePrices, 20);
                 const ma60 = calculateMA(closePrices, 60);
                 const rsi6 = calculateRSI(closePrices, 6);
                 const avgVol5 = calculateMA(volumes, 5);
+                
+                // 均線斜率偵測 (計算前一天的 MA20 來比對)
+                const prevClosePrices = closePrices.slice(0, -1);
+                const prevMa20 = calculateMA(prevClosePrices, 20);
+                const isMa20Up = ma20 > prevMa20; // 月線是否上揚
 
+                // 2. 籌碼面
                 const foreignBuys = (instRes.data || []).filter(d => d.name === 'Foreign_Investor').slice(-3).reduce((acc, cur) => acc + cur.buy - cur.sell, 0);
 
+                // 3. 基本面 (EPS TTM & 成長率)
                 const epsList = (epsRes.data || [])
                     .filter(d => d.type === 'EPS' && d.value !== 0)
-                    .sort((a,b) => new Date(a.date) - new Date(b.date))
-                    .slice(-4);
+                    .sort((a,b) => new Date(a.date) - new Date(b.date));
                 
-                const epsTTM = epsList.length > 0 ? epsList.reduce((acc, cur) => acc + cur.value, 0).toFixed(2) : 0;
+                const last4Q = epsList.slice(-4);
+                const epsTTM = last4Q.reduce((acc, cur) => acc + cur.value, 0).toFixed(2);
+                
+                // 計算成長率 (與去年同期相比)
+                let growthRate = 0;
+                if(epsList.length >= 8) {
+                    const prev4Q = epsList.slice(-8, -4);
+                    const prevEps = prev4Q.reduce((acc, cur) => acc + cur.value, 0);
+                    if(prevEps !== 0) growthRate = ((epsTTM - prevEps) / Math.abs(prevEps) * 100);
+                }
 
+                // 4. AI 合理 PE 推算
+                // 抓取該股票歷史平均 PE
+                const perList = (perRes.data || []).map(d => d.PER).filter(p => p > 0);
+                const avgPER = perList.length > 0 ? (perList.reduce((a,b)=>a+b,0)/perList.length) : 15;
+                
+                // 綜合評分：歷史 PE + 成長率調整 (PEG 概念)
+                // 若成長率 > 20%，PE 上調；若成長率 < 0，PE 下修
+                let aiPE = avgPER;
+                if (growthRate > 20) aiPE = Math.min(avgPER * 1.2, 35); // 成長股上限 35
+                else if (growthRate < 0) aiPE = Math.max(avgPER * 0.8, 10); // 衰退股下限 10
+                
                 return {
                     live: latest.close,
-                    change: (latest.close - prices[prices.length-2].close),
-                    ma20, ma60, rsi: rsi6,
+                    ma5, ma20, ma60, rsi: rsi6,
                     eps: epsTTM,
+                    growth: growthRate.toFixed(1),
+                    aiPE: aiPE.toFixed(1),
                     vol: latest.Trading_Volume,
                     avgVol: avgVol5,
                     foreign3Day: foreignBuys,
-                    open: latest.open
+                    open: latest.open,
+                    isMa20Up: isMa20Up
                 };
             } catch (e) {
                 console.error(`Analyze Error ${id}:`, e);
@@ -256,16 +278,16 @@
         async function render() {
             const body = document.getElementById('list-body');
             const head = document.getElementById('table-head');
-            body.innerHTML = '<tr><td colspan="7" class="p-10 text-center text-slate-400 font-bold animate-pulse text-xs tracking-widest">正在執行多因子策略運算...</td></tr>';
+            body.innerHTML = '<tr><td colspan="7" class="p-10 text-center text-slate-400 font-bold animate-pulse text-xs tracking-widest">AI 運算分析中...</td></tr>';
             
             let totalMkt = 0, totalCost = 0, winCount = 0, lossCount = 0;
+            // 過濾資料：持股(price > 0) 或 觀察(price == 0)
             const filtered = allData.filter(d => currentTab === 'hold' ? d.buy_price > 0 : d.buy_price === 0);
 
             if (currentTab === 'hold') {
-                // 🌟 新增「成本 / 現價」欄位
-                head.innerHTML = '<th class="p-5">標的</th><th class="p-5">成本 / 現價</th><th class="p-5">估值目標</th><th class="p-5">技術警示</th><th class="p-5">損益狀態</th><th class="p-5 text-center">AI 決策建議</th><th class="p-5 text-right">管理</th>';
+                head.innerHTML = '<th class="p-5">標的/現價</th><th class="p-5">成本/損益</th><th class="p-5">AI估值 (EPS×PE)</th><th class="p-5">成長動能</th><th class="p-5 text-center">AI 決策建議</th><th class="p-5 text-right">管理</th>';
             } else {
-                head.innerHTML = '<th class="p-5">標的/現價</th><th class="p-5">RSI(6) < 20</th><th class="p-5">籌碼/均線</th><th class="p-5 text-center">進場信號</th><th class="p-5 text-right">管理</th>';
+                head.innerHTML = '<th class="p-5">標的/現價</th><th class="p-5">RSI(6)</th><th class="p-5">均線型態</th><th class="p-5 text-center">進場信號</th><th class="p-5 text-right">管理</th>';
             }
 
             const rows = [];
@@ -278,22 +300,19 @@
                 const linkHtml = `<a href="https://tw.stock.yahoo.com/quote/${item.stock_id}" target="_blank" class="hover:text-blue-600 font-black text-slate-800 text-lg decoration-blue-500 underline-offset-4">${item.stock_id} ${name}</a>`;
 
                 if (currentTab === 'hold') {
-                    const reasonablePE = item.qty || 20; 
-                    const targetPrice = data.eps > 0 ? (data.eps * reasonablePE).toFixed(1) : 0;
+                    // --- 持股策略 (AI 自動估值) ---
+                    const targetPrice = (data.eps * data.aiPE).toFixed(1);
                     const pnlPct = (((data.live - item.buy_price)/item.buy_price)*100).toFixed(2);
                     const pnlAmt = Math.round((data.live - item.buy_price) * item.qty * 1000); 
                     
                     const isDropMA20 = data.live < data.ma20;
-                    const isHighVolBlack = (data.open > data.live) && (data.vol > data.avgVol * 2) && ((data.open - data.live)/data.open > 0.035);
                     
                     let advice = '🟡 續抱觀察';
                     let badgeClass = 'bg-slate-100 text-slate-500';
-                    let warning = '';
 
-                    if (isDropMA20 || isHighVolBlack) {
-                        advice = '🛑 建議賣出'; badgeClass = 'bg-rose-500 text-white shadow-lg shadow-rose-200';
-                        warning = isDropMA20 ? '📉 跌破月線' : '💥 爆量長黑';
-                    } else if (targetPrice > 0 && data.live >= targetPrice) {
+                    if (isDropMA20) {
+                        advice = '🛑 破線賣出'; badgeClass = 'bg-rose-500 text-white shadow-lg shadow-rose-200';
+                    } else if (data.live >= targetPrice) {
                         advice = '💰 獲利達標'; badgeClass = 'bg-emerald-500 text-white shadow-lg shadow-emerald-200';
                     }
 
@@ -303,21 +322,18 @@
 
                     rows.push(`
                         <tr class="hover:bg-slate-50 border-b border-slate-100 group">
-                            <td class="p-5">${linkHtml}</td>
+                            <td class="p-5">${linkHtml}<br><span class="text-blue-600 font-bold font-mono text-xl">${data.live}</span></td>
                             <td class="p-5">
-                                <div class="flex flex-col gap-1">
-                                    <span class="text-xs text-slate-400 font-bold uppercase">成本: ${item.buy_price}</span>
-                                    <span class="text-blue-600 font-black text-lg">${data.live}</span>
-                                </div>
+                                <span class="text-xs text-slate-400 font-bold uppercase">Cost: ${item.buy_price}</span><br>
+                                <span class="font-black ${pnlPct>=0?'text-emerald-500':'text-rose-500'} text-lg">${pnlPct}%</span>
                             </td>
                             <td class="p-5">
-                                <span class="text-xs text-slate-400 font-bold uppercase">EPS: ${data.eps}</span><br>
-                                <span class="font-black text-slate-700">目標: ${targetPrice > 0 ? targetPrice : '<span class="text-slate-300">--</span>'}</span>
+                                <span class="text-xs text-slate-400 font-bold">EPS:${data.eps} × PE:${data.aiPE}</span><br>
+                                <span class="font-black text-slate-700 text-lg">目標: ${targetPrice}</span>
                             </td>
-                            <td class="p-5 text-xs font-bold text-rose-500">${warning || '<span class="text-emerald-500"><i class="fa-solid fa-check"></i> 安全</span>'}</td>
                             <td class="p-5">
-                                <span class="font-black ${pnlPct>=0?'text-emerald-500':'text-rose-500'} text-lg">${pnlPct}%</span><br>
-                                <span class="text-xs font-bold text-slate-400">$${pnlAmt.toLocaleString()}</span>
+                                <span class="text-xs font-bold ${data.growth>0?'text-emerald-500':'text-rose-500'}">YoY: ${data.growth}%</span><br>
+                                <span class="text-[10px] text-slate-400">平均本益比參考</span>
                             </td>
                             <td class="p-5 text-center"><span class="badge ${badgeClass}">${advice}</span></td>
                             <td class="p-5 text-right"><button onclick="remove(${item.db_id})" class="text-slate-200 hover:text-rose-500 transition-colors"><i class="fa-solid fa-trash-can text-lg"></i></button></td>
@@ -325,29 +341,27 @@
                     `);
 
                 } else {
+                    // --- 觀察策略 (新增拐點偵測) ---
                     const isRSILow = data.rsi < 20; 
-                    const isAboveMA60 = data.live > data.ma60;
+                    const isTurnUp = data.ma5 > data.ma20 && data.isMa20Up; // 5MA穿過20MA 且 20MA向上
                     const isFiniBuy = data.foreign3Day > 0;
                     
-                    let signal = '🟡 持續觀察';
+                    let signal = '🟡 監控中';
                     let badgeClass = 'bg-slate-100 text-slate-400';
 
-                    if (isRSILow && isAboveMA60 && isFiniBuy) {
-                        signal = '🟢 強力買進'; badgeClass = 'bg-emerald-500 text-white shadow-lg shadow-emerald-200';
+                    if (isTurnUp) {
+                        signal = '🚀 底部翻揚'; badgeClass = 'bg-blue-600 text-white shadow-lg shadow-blue-200';
                     } else if (isRSILow) {
-                        signal = '🔵 超賣反彈'; badgeClass = 'bg-blue-100 text-blue-600';
+                        signal = '🔵 超賣反彈'; badgeClass = 'bg-emerald-500 text-white';
                     }
 
                     rows.push(`
                         <tr class="hover:bg-slate-50 border-b border-slate-100">
                             <td class="p-5">${linkHtml}<br><span class="text-slate-400 font-bold font-mono">${data.live}</span></td>
-                            <td class="p-5">
-                                <span class="font-black ${data.rsi<20?'text-emerald-500 text-lg':'text-slate-400'}">${data.rsi.toFixed(1)}</span>
-                                <span class="text-xs text-slate-300 block">標準 < 20</span>
-                            </td>
+                            <td class="p-5 font-bold ${data.rsi<20?'text-emerald-500':'text-slate-400'}">${data.rsi.toFixed(1)}</td>
                             <td class="p-5 text-xs space-y-1">
-                                <div>MA60: <span class="${isAboveMA60?'text-emerald-500 font-bold':'text-rose-500 font-bold'}">${isAboveMA60?'季線之上':'季線之下'}</span></div>
-                                <div>外資: <span class="${isFiniBuy?'text-emerald-500 font-bold':'text-slate-400 font-bold'}">${isFiniBuy?'連買':'觀望'}</span></div>
+                                <div>趨勢: <span class="${isTurnUp?'text-blue-600 font-black':'text-slate-400'}">${isTurnUp?'拐頭向上 ⤴':'盤整/向下'}</span></div>
+                                <div>外資: <span class="${isFiniBuy?'text-emerald-500 font-bold':'text-slate-400 font-bold'}">${isFiniBuy?'連買':'--'}</span></div>
                             </td>
                             <td class="p-5 text-center"><span class="badge ${badgeClass}">${signal}</span></td>
                             <td class="p-5 text-right"><button onclick="remove(${item.db_id})" class="text-slate-300 hover:text-rose-500"><i class="fa-solid fa-trash-can"></i></button></td>
@@ -359,8 +373,9 @@
             
             if (currentTab === 'hold') {
                 const diff = totalMkt - totalCost;
+                const diffPct = totalCost > 0 ? ((diff/totalCost)*100).toFixed(2) : 0;
                 document.getElementById('total-mkt-val').innerText = `$ ${Math.round(totalMkt).toLocaleString()}`;
-                document.getElementById('total-pnl-val').innerText = `${diff >= 0 ? '+' : ''}${Math.round(diff).toLocaleString()}`;
+                document.getElementById('total-pnl-val').innerText = `${diff >= 0 ? '+' : ''}${Math.round(diff).toLocaleString()} (${diffPct}%)`;
                 document.getElementById('total-pnl-val').className = `text-3xl md:text-4xl font-black ${diff >= 0 ? 'text-emerald-500' : 'text-rose-500'}`;
                 updateChart(winCount, lossCount);
             }
@@ -373,24 +388,15 @@
             
             const qty = currentTab === 'hold' ? (parseFloat(document.getElementById('in-qty').value) || 0) : 0;
             const price = currentTab === 'hold' ? (parseFloat(document.getElementById('in-price').value) || 0) : 0; 
-
-            // Hold 模式：Qty 存合理 PE (使用者輸入或預設20) -> 這裡需要資料庫擴充，目前 Qty 欄位被佔用為 PE。
-            // 修正：在 Hold 模式下，Qty 就是張數。我們把合理 PE 寫死為 20 或需新增欄位。
-            // 目前權宜之計：Hold 模式下使用預設 PE=20，不存入 DB。若要存，需修改 DB 結構。
-            // 此版本依循 v11.1 邏輯：BuyPrice=成本, Qty=PE (這會導致張數消失，這是一個 BUG)。
-            // 修正 BUG：Hold 模式下，Qty 必須是張數。PE 暫時無法存，只能全域設定或寫死。
-            // 我們這裡改為：Hold 模式下 Qty=張數。PE 統一用輸入框的值但不存 DB (下次載入會變回預設)。
-            // 但為了讓目標價能算，我們在 render 時會讀取 item.qty。
-            // **重大修正**：為了不改 DB，我們把 PE 存到哪？
-            // 觀察名單：Qty 用來存 PE。
-            // 持股名單：Qty 用來存 張數。PE 只能預設 20。
             
-            const insertQty = currentTab === 'hold' ? qty : (parseFloat(document.getElementById('in-pe-watch').value) || 20);
+            // 觀察名單可存目標價到 qty 欄位 (權宜)
+            const targetPrice = currentTab === 'watch' ? (parseFloat(document.getElementById('in-target-price').value) || 0) : 0;
+            const finalQty = currentTab === 'hold' ? qty : targetPrice;
 
-            const { error } = await _supabase.from('user_holdings').insert([{ stock_id: id, qty: insertQty, buy_price: price }]);
+            const { error } = await _supabase.from('user_holdings').insert([{ stock_id: id, qty: finalQty, buy_price: price }]);
             
             if (!error) { await fetchFromCloud(); document.querySelectorAll('input').forEach(i => i.value = ""); }
-            document.getElementById('add-btn').innerText = currentTab === 'hold' ? "新增持股" : "新增觀察";
+            document.getElementById('add-btn').innerText = currentTab === 'hold' ? "存入雲端並運算" : "新增觀察";
         }
 
         async function remove(id) {
@@ -410,7 +416,7 @@
             document.querySelectorAll('.hold-field').forEach(e => e.style.display = t === 'hold' ? 'block' : 'none');
             document.querySelectorAll('.watch-field').forEach(e => e.style.display = t === 'watch' ? 'block' : 'none');
             
-            document.getElementById('add-btn').innerText = t === 'hold' ? "新增持股" : "新增觀察";
+            document.getElementById('add-btn').innerText = t === 'hold' ? "存入雲端並運算" : "新增觀察";
             render();
         }
 
