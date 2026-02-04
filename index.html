@@ -107,6 +107,8 @@
                     <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block">股票代號</label>
                     <input id="in-id" type="text" placeholder="2330" class="w-full border-2 border-slate-100 p-3 rounded-xl font-bold focus:border-blue-500 outline-none transition-colors">
                 </div>
+                
+                <!-- 持股欄位 -->
                 <div class="hold-field md:col-span-1">
                     <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block">持股張數</label>
                     <input id="in-qty" type="number" placeholder="1" class="w-full border-2 border-slate-100 p-3 rounded-xl font-bold outline-none">
@@ -147,7 +149,7 @@
 
         let currentTab = 'hold', stockDB = {}, allData = [], chartInstance = null;
 
-        // --- 初始化：快取名稱 + 雲端資料 ---
+        // --- 1. 極速初始化 (快取優化) ---
         async function init() {
             try {
                 // 1. 嘗試載入名稱快取
